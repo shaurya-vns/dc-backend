@@ -1,0 +1,9 @@
+RESPONSE_ERROR = 0
+RESPONSE_SUCCESS = 1
+RESPONSE_INVALID = 2
+
+INVALID_TOKEN = 'Invalid token'
+
+#Drill
+
+ADDRESS_NOT_FOUND = 'Address not found'

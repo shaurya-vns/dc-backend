@@ -1,0 +1,73 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+.venv/
+env/
+ENV/
+
+# Environment Variables
+.env
+.env.*
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+local_settings.py
+media/
+staticfiles/
+
+# Migrations (optional)
+# */migrations/*
+# !*/migrations/__init__.py
+
+# Pytest / Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Redis
+*.rdb
+*.aof
+
+# Celery
+celerybeat-schedule*
+celerybeat.pid
+
+# Build
+build/
+dist/
+*.egg-info/
+
+# Firebase Credentials
+service_account/
+firebase_key.json
+
+# ngrok
+.ngrok2/
+ngrok.yml
+
+# Secrets
+secret_key.txt
+credentials.json
+
+# Swagger Generated Files
+swagger.json
+swagger.yaml
