@@ -20,20 +20,4 @@ class OrderListSerializer(serializers.ModelSerializer):
             "delivery_date",
             "status",
             "created_at",
-        )
-
-class UpdateOrderStatusSerializer(serializers.Serializer):
-
-    orderId = serializers.IntegerField()
-    subscriptionId = serializers.IntegerField()
-
-    status = serializers.ChoiceField(
-        choices=[
-            "pending",
-            "assigned",
-            "out_for_delivery",
-            "delivered",
-            "cancelled",
-            "skipped"
-        ]
-    )
+        ) 

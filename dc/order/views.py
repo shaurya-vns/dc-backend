@@ -264,19 +264,17 @@ class OrderViewSet(viewsets.ViewSet):
             except Exception as e:
                 return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
             
-    
+        
         @swagger_auto_schema(
-            request_body=UpdateOrderStatusSerializer,
             tags=["Order"],
-            operation_description="update Order specific by orderId, subscriptionId",
-            responses={200: UpdateOrderStatusSerializer, 404: 'Not found'},
+            operation_description="Get Order history",
             manual_parameters=[TOKEN]
         )
-        @action(detail=False, methods=["post"])
-        def update_order_status(self, request):
+        @action(detail=False, methods=["get"])
+        def order_history(self, request):
 
             try:
-                 
+
                 print('request ', request)
                 customer, error = authenticate_and_get_user(request)
                 print('request customer ', customer)
@@ -285,44 +283,28 @@ class OrderViewSet(viewsets.ViewSet):
                 if error:
                    return error
 
-                serializer = UpdateOrderStatusSerializer(
-                    data=request.data
+                orders = OrderModel.objects.filter(
+                    customer=customer,
+                    status__in=[
+                        "delivered",
+                        "cancelled",
+                        "skipped"
+                    ]
+                ).select_related(
+                    "subscription",
+                    "subscription__product"
+                ).order_by(
+                    "-delivery_date"
                 )
-
-                if not serializer.is_valid():
-
-                    return response_fun(
-                        RESPONSE_INVALID,
-                        {
-                            "message": "Something went wrong !!",
-                            "code": ERROR_CODE_NOT_FOUND
-                        }
-                    )
-
-    
-                order = OrderModel.objects.get(
-                    id=serializer.validated_data["orderId"],
-                    subscription_id=serializer.validated_data["subscriptionId"],
-                    customer=customer
-                )
-
-                order.status = serializer.validated_data["status"]
-                order.save()
 
                 return response_fun(
                     RESPONSE_SUCCESS,
                     {
-                        "message": "Order status updated successfully"
-                    }
-                )
-
-            except OrderModel.DoesNotExist:
-
-                return response_fun(
-                    RESPONSE_INVALID,
-                    {
-                        "message": "Order not found",
-                        "code": ERROR_CODE_NOT_FOUND
+                        "message": "Order history fetched successfully",
+                        "data": OrderListSerializer(
+                            orders,
+                            many=True
+                        ).data
                     }
                 )
 

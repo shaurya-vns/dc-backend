@@ -11,6 +11,6 @@ urlpatterns = [
     path("upcoming-orders", OrderViewSet.as_view({"get": "upcoming_orders"})),
     path("today-orders", OrderViewSet.as_view({"get": "today_orders"})),
     path("next-day-order", OrderViewSet.as_view({"get": "next_day_orders"})),
-    path("order-subscription", OrderViewSet.as_view({"get": "get_order_by_subscription_id"})),
-    path("order-update", OrderViewSet.as_view({"post": "update_order_status"})),    
+    path("subscription", OrderViewSet.as_view({"get": "get_order_by_subscription_id"})),
+    path("history", OrderViewSet.as_view({"get": "order_history"})),
 ]

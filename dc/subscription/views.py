@@ -125,3 +125,138 @@ class SubscriptionViewSet(viewsets.ViewSet):
 
             
             
+        @swagger_auto_schema(
+                  tags=["Subscription"],
+                  operation_description="Pause subscription",
+                  manual_parameters=[TOKEN, SUBSCRIPTION_D]
+        )
+        @action(detail=False, methods=["get"])
+        def subscriptions_pause(self, request):
+
+            try:
+                print('request ', request)
+                customer, error = authenticate_and_get_user(request)
+                print('request customer ', customer)
+                print('request error ', error)
+
+                if error:
+                    return error
+                
+                subscriptionId = request.GET.get("subscriptionId")
+                 
+                subscription = SubscriptionModel.objects.get(
+                        id=subscriptionId,
+                        user=customer
+                    )
+                
+                subscription.status = "paused"
+                subscription.save()
+
+                OrderModel.objects.filter(subscription=subscription,
+                        status="pending"
+                    ).update(
+                        status="paused"
+                    )
+
+                return response_fun(
+                    RESPONSE_SUCCESS,
+                    {
+                        "message": "Subscription paused successfully"
+                    } )
+            
+            except Exception as e:
+                 return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
+                
+
+            
+        @swagger_auto_schema(
+                  tags=["Subscription"],
+                  operation_description="Cancelled subscription",
+                  manual_parameters=[TOKEN, SUBSCRIPTION_D]
+        )
+        @action(detail=False, methods=["get"])
+        def subscriptions_cancelled(self, request):
+
+            try:
+                print('request ', request)
+                customer, error = authenticate_and_get_user(request)
+                print('request customer ', customer)
+                print('request error ', error)
+
+                if error:
+                    return error
+                
+                subscriptionId = request.GET.get("subscriptionId")
+                 
+                subscription = SubscriptionModel.objects.get(
+                        id=subscriptionId,
+                        user=customer
+                    )
+                
+                subscription.status = "cancelled"
+                subscription.save()
+
+                OrderModel.objects.filter(
+                        subscription=subscription,
+                        status__in=["pending", "paused"]
+                    ).update(
+                        status="cancelled"
+                    )
+
+                return response_fun(
+                    RESPONSE_SUCCESS,
+                    {
+                        "message": "Subscription cancelled successfully"
+                    } )
+            
+            except Exception as e:
+                 return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
+                
+
+            
+        @swagger_auto_schema(
+                  tags=["Subscription"],
+                  operation_description="Resume subscription",
+                  manual_parameters=[TOKEN, SUBSCRIPTION_D]
+        )
+        @action(detail=False, methods=["get"])
+        def subscriptions_resume(self, request):
+
+            try:
+                print('request ', request)
+                customer, error = authenticate_and_get_user(request)
+                print('request customer ', customer)
+                print('request error ', error)
+
+                if error:
+                    return error
+                
+                subscriptionId = request.GET.get("subscriptionId")
+                 
+                subscription = SubscriptionModel.objects.get(
+                        id=subscriptionId,
+                        user=customer
+                    )
+                
+                subscription.status = "active"
+                subscription.save()
+
+                OrderModel.objects.filter(
+                    subscription=subscription,
+                    status="paused"
+                ).update(
+                    status="pending"
+                )
+
+                return response_fun(
+                    RESPONSE_SUCCESS,
+                    {
+                        "message": "Subscription resumed successfully"
+                    } )
+            
+            except Exception as e:
+                 return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
+                
+
+            
+            

@@ -26,6 +26,8 @@ urlpatterns = [
     path('api/product/',include('product.urls')),
     path('api/subscription/',include('subscription.urls')),
     path('api/order/',include('order.urls')),
+    path('api/delivery/',include('delivery.urls')),
+    path('api/dashboard/',include('dashboard.urls')),
 
    
    # Swagger URLs

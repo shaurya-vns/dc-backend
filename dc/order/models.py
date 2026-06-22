@@ -15,7 +15,8 @@ class OrderModel(BaseModel):
         ("delivered", "Delivered"),
         ("cancelled", "Cancelled"),
         ("skipped", "Skipped"),
-    )
+        ("paused", "Paused")
+        )
 
     subscription = models.ForeignKey(
         SubscriptionModel,
