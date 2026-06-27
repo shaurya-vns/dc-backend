@@ -22,12 +22,14 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/customer/',include('customer.urls')),
+    path('api/users/',include('users.urls')),
+    path('api/subowner/',include('owner.urls')),
     path('api/product/',include('product.urls')),
     path('api/subscription/',include('subscription.urls')),
     path('api/order/',include('order.urls')),
     path('api/delivery/',include('delivery.urls')),
     path('api/dashboard/',include('dashboard.urls')),
+    
 
    
    # Swagger URLs

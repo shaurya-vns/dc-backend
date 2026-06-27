@@ -30,8 +30,8 @@ class DeliveryViewSet(viewsets.ViewSet):
             try:
                  
                 print('request ', request)
-                customer, error = authenticate_and_get_user(request)
-                print('request customer ', customer)
+                user, error = authenticate_and_get_user(request)
+                print('request user ', user)
                 print('request error ', error)
                     
                 if error:
@@ -55,7 +55,7 @@ class DeliveryViewSet(viewsets.ViewSet):
                 order = OrderModel.objects.get(
                     id=serializer.validated_data["orderId"],
                     subscription_id=serializer.validated_data["subscriptionId"],
-                    customer=customer
+                    user=user
                 )
 
                 order.status = serializer.validated_data["status"]

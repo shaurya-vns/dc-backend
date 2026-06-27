@@ -15,6 +15,7 @@ class ProductAdmin(admin.ModelAdmin):
         "plan_type",
         "is_active",
         "created_at",
+        'subOwner'
     )
 
     list_filter = (

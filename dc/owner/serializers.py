@@ -1,17 +1,20 @@
-from .models import CustomerModel
+from users.models import UserModel
 from rest_framework import serializers
  
 
-class CustomerSerializer(serializers.ModelSerializer):
+class CreateSubOwnerSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CustomerModel
+        model = UserModel
         fields = [
             'id',
             "name", 
             'platform',
             'deviceToken',
             'deviceId',
-            "password", "phoneNumber", "userType", 'salt', 
+            "password", 
+            "phoneNumber",
+            'salt', 
+            'userType'
         ]
         extra_kwargs = {
             "name": {"required": True},
@@ -23,7 +26,7 @@ class CustomerSerializer(serializers.ModelSerializer):
         }
 
 
-class LogInSwaggerSerializer(serializers.Serializer):
+class LoginSubOwnerSerializer(serializers.Serializer):
     phoneNumber = serializers.CharField()
     password = serializers.CharField()
     class Meta:

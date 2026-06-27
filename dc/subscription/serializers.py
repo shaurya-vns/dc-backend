@@ -54,24 +54,6 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
 
         return attrs
 
-    def create(self, validated_data):
-
-        customer = self.context["customer"]
-
-        subscription = SubscriptionModel.objects.create(
-            user=customer,
-            total_days=validated_data["total_days"],
-            amount=validated_data["amount"],
-            end_date=validated_data["end_date"],
-            product=validated_data["product"],
-            pricing_options=validated_data["pricing_options"],
-            start_date=validated_data["start_date"],
-        )
-
-        create_subscription_orders(subscription)
-
-        return subscription
-    
 
 def create_subscription_orders(subscription):
 
@@ -87,7 +69,7 @@ def create_subscription_orders(subscription):
         for meal_type in meal_types:
             OrderModel.objects.create(
                 subscription=subscription,
-                customer=subscription.user,
+                user=subscription.user,
                 meal_type=meal_type,
                 delivery_date=current_date
             )
@@ -120,4 +102,3 @@ class SubscriptionListSerializer(serializers.ModelSerializer):
             "status",
             "created_at",
         )
-         

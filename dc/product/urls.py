@@ -6,6 +6,10 @@ from django.urls import path,include
 router = DefaultRouter()
 
 urlpatterns = [
-    path('add', ProductViewSet.as_view({'post': 'create_product'})),
+    path('create', ProductViewSet.as_view({'post': 'create_product'})),
     path('list', ProductViewSet.as_view({'get': 'product_list'})),
+    path('subowner', ProductViewSet.as_view({'get': 'product_list_subowner'})),
+
+
+    
 ]

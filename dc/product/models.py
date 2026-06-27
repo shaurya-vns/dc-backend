@@ -1,6 +1,7 @@
 from django.db import models
 from dc.base_model import BaseModel
 from django.contrib.postgres.fields import ArrayField
+from users.models import UserModel
 
 # Create your models here.
 
@@ -14,6 +15,15 @@ class ProductModel(BaseModel):
         ("breakfast_dinner", "Breakfast + Dinner"),
         ("lunch_dinner", "Lunch + Dinner"),
         ("breakfast_lunch_dinner", "Breakfast + Lunch + Dinner")
+    )
+
+    subOwner = models.ForeignKey(
+        UserModel,
+        on_delete=models.CASCADE,
+        related_name="products",
+        limit_choices_to={"userType": UserModel.SUB_OWNER},
+        null=True,
+        blank=True
     )
 
     name = models.CharField( max_length=500,)

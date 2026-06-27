@@ -30,7 +30,8 @@ class ProductViewSet(viewsets.ViewSet):
         
         @swagger_auto_schema(
         request_body=ProductCreateSerializer,
-        tags=["Product"]
+        tags=["Product"],
+        operation_description="Create product by subowner",
         )
         @action(detail=False, methods=["post"])
         def create_product(self, request):
@@ -51,7 +52,8 @@ class ProductViewSet(viewsets.ViewSet):
                return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
 
         @swagger_auto_schema(
-            tags=["Product"]
+            tags=["Product"],
+            operation_description="List of all products",
         )
         @action(detail=False, methods=['get'])
         def product_list(self, request):
@@ -69,4 +71,37 @@ class ProductViewSet(viewsets.ViewSet):
 
             except Exception as e:
                 return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
+            
+        @swagger_auto_schema(
+            tags=["Product"],
+            operation_description="List of all products by subowner",
+            manual_parameters=[SUB_OWNER_ID]
+        )
+        @action(detail=False, methods=['get'])
+        def product_list_subowner(self, request):
+            try:
+
+
+                subOwnerId = request.GET.get("subOwnerId")
+                print('request subOwnerId ', subOwnerId)
+
+                products = ProductModel.objects.filter(
+                    subOwner_id = subOwnerId,
+                    is_active=True
+                ).order_by("-created_at")
+
+                
+                print('request products ', products)
+
+                serializer = ProductListSerializer(products,   many=True)
+
+                return response_fun(RESPONSE_SUCCESS,
+                                    {
+                                          'message':"Subscription created successfully",
+                                          'data': serializer.data
+                                    })
+            except Exception as e:
+                return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
+
+
 

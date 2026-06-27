@@ -8,6 +8,5 @@ router = DefaultRouter()
 urlpatterns = [
     path("summary", DashboardViewSet.as_view({"get": "get_dashboard"})),  
     path("today-orders", DashboardViewSet.as_view({"get": "today_orders"})),  
-
-      
+    path("subowners", DashboardViewSet.as_view({"get": "get_subowner_list"})),  
 ]

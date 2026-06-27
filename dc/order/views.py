@@ -26,13 +26,13 @@ class OrderViewSet(viewsets.ViewSet):
         def my_orders(self, request):
                 try:
                     print('request ', request)
-                    customer, error = authenticate_and_get_user(request)
-                    print('request customer ', customer)
+                    user, error = authenticate_and_get_user(request)
+                    print('request user ', user)
                     
                     if error:
                        return error
                     
-                    qs = OrderModel.objects.filter(customer=customer).order_by("-id")
+                    qs = OrderModel.objects.filter(user=user).order_by("-id")
 
                     serializer = OrderListSerializer(qs, many=True)
                     return response_fun(RESPONSE_SUCCESS,{
@@ -57,8 +57,8 @@ class OrderViewSet(viewsets.ViewSet):
             try:
                 
                 print('request ', request)
-                customer, error = authenticate_and_get_user(request)
-                print('request customer ', customer)
+                user, error = authenticate_and_get_user(request)
+                print('request user ', user)
                 print('request error ', error)
                     
                 if error:
@@ -70,7 +70,7 @@ class OrderViewSet(viewsets.ViewSet):
 
 
                 order = OrderModel.objects.filter(
-                    customer=customer,
+                    user=user,
                     id=orderId,
                     subscription_id=subscriptionId
                 ).order_by(
@@ -100,15 +100,15 @@ class OrderViewSet(viewsets.ViewSet):
             try:
 
                 print('request ', request)
-                customer, error = authenticate_and_get_user(request)
-                print('request customer ', customer)
+                user, error = authenticate_and_get_user(request)
+                print('request user ', user)
                 print('request error ', error)
                     
                 if error:
                    return error
 
                 orders = OrderModel.objects.filter(
-                    customer=customer,
+                    user=user,
                     delivery_date__gte=timezone.now().date()
                 ).order_by(
                     "delivery_date"
@@ -139,8 +139,8 @@ class OrderViewSet(viewsets.ViewSet):
 
             try:
                 print('request ', request)
-                customer, error = authenticate_and_get_user(request)
-                print('request customer ', customer)
+                user, error = authenticate_and_get_user(request)
+                print('request user ', user)
                 print('request error ', error)
                     
                 if error:
@@ -150,7 +150,7 @@ class OrderViewSet(viewsets.ViewSet):
                 print('request today ', today)
 
                 orders = OrderModel.objects.filter(
-                    customer=customer,
+                    user=user,
                     delivery_date=today
                 )
 
@@ -185,8 +185,8 @@ class OrderViewSet(viewsets.ViewSet):
             try:
 
                 print('request ', request)
-                customer, error = authenticate_and_get_user(request)
-                print('request customer ', customer)
+                user, error = authenticate_and_get_user(request)
+                print('request user ', user)
                 print('request error ', error)
                     
                 if error:
@@ -195,7 +195,7 @@ class OrderViewSet(viewsets.ViewSet):
                 next_date = timezone.now().date() + timedelta(days=1)
 
                 orders = OrderModel.objects.filter(
-                    customer=customer,
+                    user=user,
                     delivery_date=next_date
                 ).order_by("meal_type")
 
@@ -234,8 +234,8 @@ class OrderViewSet(viewsets.ViewSet):
             try:
                 
                 print('request ', request)
-                customer, error = authenticate_and_get_user(request)
-                print('request customer ', customer)
+                user, error = authenticate_and_get_user(request)
+                print('request user ', user)
                 print('request error ', error)
                     
                 if error:
@@ -245,7 +245,7 @@ class OrderViewSet(viewsets.ViewSet):
                 print('request subscriptionId ', subscriptionId)
 
                 orders = OrderModel.objects.filter(
-                    customer=customer,
+                    user=user,
                     subscription_id=subscriptionId
                 ).order_by(
                     "delivery_date",
@@ -276,15 +276,15 @@ class OrderViewSet(viewsets.ViewSet):
             try:
 
                 print('request ', request)
-                customer, error = authenticate_and_get_user(request)
-                print('request customer ', customer)
+                user, error = authenticate_and_get_user(request)
+                print('request user ', user)
                 print('request error ', error)
                     
                 if error:
                    return error
 
                 orders = OrderModel.objects.filter(
-                    customer=customer,
+                    user=user,
                     status__in=[
                         "delivered",
                         "cancelled",

@@ -15,6 +15,10 @@ from datetime import timedelta
 from order.models import OrderModel
 from subscription.models import SubscriptionModel
 from order.serializers import OrderListSerializer
+from support.serializers import UpdateSupportRequestSerializer
+from support.models import SupportRequestModel
+from users.models import UserModel
+from users.serializers import SubOwnerListSerializer
   
 
 class DashboardViewSet(viewsets.ViewSet):
@@ -29,8 +33,8 @@ class DashboardViewSet(viewsets.ViewSet):
             try:
                  
                 print('request ', request)
-                customer, error = authenticate_and_get_user(request)
-                print('request customer ', customer)
+                user, error = authenticate_and_get_user(request)
+                print('request user ', user)
                 print('request error ', error)
                     
                 if error:
@@ -40,32 +44,32 @@ class DashboardViewSet(viewsets.ViewSet):
                 tomorrow = today + timedelta(days=1)
 
                 active_subscriptions = SubscriptionModel.objects.filter(
-                    user=customer,
+                    user=user,
                     status="active"
                 ).count()
 
                 today_orders = OrderModel.objects.filter(
-                    customer=customer,
+                    user=user,
                     delivery_date=today
                 ).count()
 
                 tomorrow_orders = OrderModel.objects.filter(
-                    customer=customer,
+                    user=user,
                     delivery_date=tomorrow
                 ).count()
 
                 pending_orders = OrderModel.objects.filter(
-                    customer=customer,
+                    user=user,
                     status="pending"
                 ).count()
 
                 delivered_orders = OrderModel.objects.filter(
-                    customer=customer,
+                    user=user,
                     status="delivered"
                 ).count()
 
                 upcoming_delivery = OrderModel.objects.filter(
-                    customer=customer,
+                    user=user,
                     delivery_date__gte=today
                 ).order_by(
                     "delivery_date"
@@ -138,5 +142,38 @@ class DashboardViewSet(viewsets.ViewSet):
                     {
                         "message": str(e),
                         "code": ERROR_CODE_NOT_FOUND
+                    }
+                )
+            
+        @swagger_auto_schema(
+            tags=["Dashboard"],
+            operation_description="Get all Sub owner list",
+        )
+        @action(detail=False, methods=["get"])
+        def get_subowner_list(self, request):
+
+            try:
+
+                sub_owners = UserModel.objects.filter(
+                    userType=UserModel.SUB_OWNER,
+                    is_active=True
+                ).order_by("-id")
+
+                serializer = SubOwnerListSerializer(sub_owners, many=True)
+
+                return response_fun(
+                    RESPONSE_SUCCESS,
+                    {
+                        "message": "Sub owner list",
+                         "data": serializer.data
+                    }
+                )
+
+            except Exception as e:
+
+                return response_fun(
+                    RESPONSE_INVALID,
+                    {
+                        "message": str(e)
                     }
                 )

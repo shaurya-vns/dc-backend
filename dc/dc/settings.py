@@ -73,12 +73,15 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'drf_yasg',  # Add drf_yasg here
      # Custom apps
-    'customer',
+    'users',
+    'owner',
     'product',
     'subscription',
     'order',
     'delivery',
-    'dashboard'
+    'dashboard',
+    'support',
+
 ]
 
 MIDDLEWARE = [

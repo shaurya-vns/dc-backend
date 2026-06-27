@@ -6,7 +6,7 @@ import jwt
 from .settings import SECRET_KEY,REDIS
 from .errors import ERROR_CODE_INVALID_TOKEN
 from .constant import INVALID_TOKEN
-from customer.models import CustomerModel
+from users.models import UserModel
 from dc.errors import *
 
 def response_fun(*args):
@@ -49,7 +49,7 @@ def get_user_or_error(user_id):
     """
     Return User instance if exists, else None.
     """
-    return CustomerModel.objects.filter(id=user_id).first()
+    return UserModel.objects.filter(id=user_id).first()
 
 
 def authenticate_and_get_user(request):
@@ -64,7 +64,7 @@ def authenticate_and_get_user(request):
         return None, resp
 
     user_id = resp.get('userId')
-    user = CustomerModel.objects.filter(id=user_id).first()
+    user = UserModel.objects.filter(id=user_id).first()
     if user is None:
         return None, response_fun(
             RESPONSE_INVALID,

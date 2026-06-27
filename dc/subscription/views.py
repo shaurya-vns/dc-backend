@@ -11,6 +11,7 @@ from dc.parameters import TOKEN
 from dc.utils import authenticate_and_get_user
 from dc.errors import *
 from dc.parameters import *
+from .service import SubscriptionService
   
 
 class SubscriptionViewSet(viewsets.ViewSet):
@@ -25,31 +26,77 @@ class SubscriptionViewSet(viewsets.ViewSet):
         def create_subscription(self, request):
                 try:
                     print('request ', request)
-                    customer, error = authenticate_and_get_user(request)
-                    print('request customer ', customer)
+                    user, error = authenticate_and_get_user(request)
+                    print('request user ', user)
                     print('request error ', error)
 
                     if error:
                        return error
                     
-                    if customer.userType == CustomerModel.USER_TYPE_CUSTOMER:
-                        data = request.data.copy()
-                        serializer = SubscriptionCreateSerializer(data=data, context={'request': request,  'customer': customer  })
-                        if serializer.is_valid():
-                            serializer.save()
-                            return response_fun(RESPONSE_SUCCESS, 
-                                                {
-                                                    'message':"Subscription created successfully",
-                                                    'data': serializer.data
-                                                }
-                                            )
-                        return response_fun(RESPONSE_INVALID, {'errors': serializer.errors,'code': ERROR_CODE_BAD_REQUEST}) 
-                    return response_fun(RESPONSE_INVALID, {'message': 'Only customer allow','code': ERROR_CODE_NOT_FOUND})
+                    # ONLY CUSTOMER ALLOWED
+                    if user.userType != UserModel.USER:
+                        return response_fun(
+                            RESPONSE_INVALID,
+                            {
+                                "message": "Only customer allowed",
+                                "code": ERROR_CODE_NOT_FOUND
+                            }
+                        )
                     
+                    serializer = SubscriptionCreateSerializer(
+                        data=request.data,
+                        context={"user": user}
+                    )
 
+                    if not serializer.is_valid():
+                        return response_fun(
+                            RESPONSE_INVALID,
+                            {
+                                "message": serializer.errors,
+                                "code": ERROR_CODE_BAD_REQUEST
+                            }
+                        )
+                    
+                    data = serializer.validated_data
+
+                    product = data["product"]
+                    parent =  user.parent
+                    print('user parent ', parent)
+                    print('proudct owner ', product.subOwner)
+
+                    if product.subOwner_id != user.parent_id:
+                        return  response_fun(
+                            RESPONSE_INVALID,
+                            {
+                                "message": 'Invalid access: product does not belong to your SubOwner.',
+                                "code": ERROR_CODE_BAD_REQUEST
+                            } 
+                         )
+
+                    subscription = SubscriptionService.create_subscription(
+                        user = user,
+                        product = data["product"],
+                        pricing_options=data["pricing_options"],
+                        start_date=data["start_date"],
+                    )
+
+                    return response_fun(RESPONSE_SUCCESS,{
+                            "message": "Subscription created successfully",
+                            "data": {
+                                "id": subscription.id,
+                                "userId": subscription.user.id,
+                                "subOwnerId": subscription.subOwner.id,
+                                "productId": subscription.product.id,
+                                "pricingId": subscription.pricing_options.id,
+                                "start_date": subscription.start_date,
+                                "end_date": subscription.end_date,
+                                "status": subscription.status,
+                            }
+                        }
+                    )
                     
                 except Exception as e:
-                    print(f'serializer ID {e}')
+                    print('error ', e)
                     return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
                 
 
@@ -64,15 +111,15 @@ class SubscriptionViewSet(viewsets.ViewSet):
 
             try:
                 print('request ', request)
-                customer, error = authenticate_and_get_user(request)
-                print('request customer ', customer)
+                user, error = authenticate_and_get_user(request)
+                print('request user ', user)
                 print('request error ', error)
 
                 if error:
                     return error
                  
                 qs = SubscriptionModel.objects.filter(
-                    user=customer
+                    user=user
                 ).order_by("-id")
 
                 serializer = SubscriptionListSerializer(qs, many=True)
@@ -99,8 +146,8 @@ class SubscriptionViewSet(viewsets.ViewSet):
 
             try:
                 print('request ', request)
-                customer, error = authenticate_and_get_user(request)
-                print('request customer ', customer)
+                user, error = authenticate_and_get_user(request)
+                print('request customer ', user)
                 print('request error ', error)
 
                 if error:
@@ -109,7 +156,7 @@ class SubscriptionViewSet(viewsets.ViewSet):
                 subscriptionId = request.GET.get("subscriptionId")
                  
                 qs = SubscriptionModel.objects.filter(
-                    user=customer,
+                    user=user,
                     subscription_id=subscriptionId
                 )
 
@@ -135,8 +182,8 @@ class SubscriptionViewSet(viewsets.ViewSet):
 
             try:
                 print('request ', request)
-                customer, error = authenticate_and_get_user(request)
-                print('request customer ', customer)
+                user, error = authenticate_and_get_user(request)
+                print('request user ', user)
                 print('request error ', error)
 
                 if error:
@@ -146,7 +193,7 @@ class SubscriptionViewSet(viewsets.ViewSet):
                  
                 subscription = SubscriptionModel.objects.get(
                         id=subscriptionId,
-                        user=customer
+                        user=user
                     )
                 
                 subscription.status = "paused"
@@ -179,8 +226,8 @@ class SubscriptionViewSet(viewsets.ViewSet):
 
             try:
                 print('request ', request)
-                customer, error = authenticate_and_get_user(request)
-                print('request customer ', customer)
+                user, error = authenticate_and_get_user(request)
+                print('request customer ', user)
                 print('request error ', error)
 
                 if error:
@@ -190,7 +237,7 @@ class SubscriptionViewSet(viewsets.ViewSet):
                  
                 subscription = SubscriptionModel.objects.get(
                         id=subscriptionId,
-                        user=customer
+                        user=user
                     )
                 
                 subscription.status = "cancelled"
@@ -224,8 +271,8 @@ class SubscriptionViewSet(viewsets.ViewSet):
 
             try:
                 print('request ', request)
-                customer, error = authenticate_and_get_user(request)
-                print('request customer ', customer)
+                user, error = authenticate_and_get_user(request)
+                print('request user ', user)
                 print('request error ', error)
 
                 if error:
@@ -235,7 +282,7 @@ class SubscriptionViewSet(viewsets.ViewSet):
                  
                 subscription = SubscriptionModel.objects.get(
                         id=subscriptionId,
-                        user=customer
+                        user=user
                     )
                 
                 subscription.status = "active"
@@ -259,4 +306,4 @@ class SubscriptionViewSet(viewsets.ViewSet):
                 
 
             
-            
+       
