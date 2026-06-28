@@ -81,6 +81,7 @@ INSTALLED_APPS = [
     'delivery',
     'dashboard',
     'support',
+    'reviews'
 
 ]
 

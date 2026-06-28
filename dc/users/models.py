@@ -107,12 +107,15 @@ class UserAddress(BaseModel):
 
     state = models.CharField(max_length=100, blank=True,)
 
-    pincode = models.DecimalField(max_digits=10,default=0,  decimal_places=7,)
+    pincode = models.PositiveIntegerField(
+        null=True,
+        blank=True
+    )
 
     latitude = models.DecimalField(
         max_digits=10,
         decimal_places=7,
-        default=0.0
+        default=0.0,
     )
 
     longitude = models.DecimalField(
@@ -122,6 +125,9 @@ class UserAddress(BaseModel):
     )
 
     isDefault = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["-isDefault", "-id"]
 
 
     def __str__(self):

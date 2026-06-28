@@ -27,4 +27,24 @@ SUB_OWNER_ID = openapi.Parameter(
     required=True
 )
 
+ADDRESS_ID = openapi.Parameter(
+    'addressId',
+    openapi.IN_QUERY,
+    description="address ID",
+    type=openapi.TYPE_INTEGER,
+    required=True
+)
+
+PRODUCT_ID = openapi.Parameter(
+    'productId',
+    openapi.IN_QUERY,
+    description="product ID",
+    type=openapi.TYPE_INTEGER,
+    required=True
+)
+
+
+
+
+
 USER_ID = openapi.Parameter('userId', openapi.IN_QUERY, description="User ID", type=openapi.TYPE_INTEGER)

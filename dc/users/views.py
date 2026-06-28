@@ -216,3 +216,244 @@ class UserViewSet(viewsets.ViewSet):
                     "code": ERROR_CODE_BAD_REQUEST,
                 },
             )
+        
+
+    
+
+    @swagger_auto_schema(
+        tags=["Users"],
+        request_body=UserAddressSerializer,
+        manual_parameters=[TOKEN]
+    )
+    @action(detail=False, methods=["post"])
+    def address_add(self, request):
+
+        try:
+
+            user, error = authenticate_and_get_user(request)
+
+            if error:
+                return error
+
+            if user.userType != UserModel.USER:
+                return response_fun(
+                    RESPONSE_INVALID,
+                    {
+                        "message": "Only User can add address.",
+                        "code": ERROR_CODE_BAD_REQUEST
+                    }
+                )
+
+            serializer = UserAddressSerializer(
+                data=request.data,
+                context={"user": user}
+            )
+
+            if serializer.is_valid():
+                serializer.save()
+
+                return response_fun(
+                    RESPONSE_SUCCESS,
+                    {
+                        "message": "Address added successfully.",
+                        "data": serializer.data
+                    }
+                )
+
+            return response_fun(
+                RESPONSE_INVALID,
+                {
+                    "errors": serializer.errors,
+                    "code": ERROR_CODE_BAD_REQUEST
+                }
+            )
+    
+        except Exception as e:
+                print('error ', e)
+                return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
+
+
+    
+
+    @swagger_auto_schema(
+        tags=["Users"],
+        manual_parameters=[TOKEN]
+    )
+    @action(detail=False, methods=["get"])
+    def address_list(self, request):
+
+        try:
+
+            user, error = authenticate_and_get_user(request)
+
+            if error:
+                return error
+
+            addresses = UserAddress.objects.filter(
+                user=user
+            ).order_by("-isDefault", "-id")
+
+            serializer = UserAddressSerializer(
+                addresses,
+                many=True
+            )
+
+            return response_fun(
+                RESPONSE_SUCCESS,
+                {
+                    "data": serializer.data
+                }
+            )
+        
+        except Exception as e:
+                return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
+
+    
+    @swagger_auto_schema(
+        tags=["Users"],
+        manual_parameters=[TOKEN]
+    )
+    @action(detail=False, methods=["get"])
+    def address_default(self, request):
+
+        try:
+
+            user, error = authenticate_and_get_user(request)
+
+            if error:
+                return error
+            
+            if user.userType != UserModel.USER:
+                return response_fun(
+                    RESPONSE_INVALID,
+                    {
+                        "message": "Only User can access this API.",
+                        "code": ERROR_CODE_BAD_REQUEST,
+                    },
+                )
+
+
+            addresses = UserAddress.objects.filter(
+                user=user,
+                isDefault = True
+            ).first()
+
+            serializer = UserAddressSerializer(addresses)
+
+            return response_fun(
+                RESPONSE_SUCCESS,
+                {
+                    "data": serializer.data
+                }
+            )
+        
+        except Exception as e:
+                print('eeeeee', e)
+                return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
+
+    
+
+    @swagger_auto_schema(
+        tags=["Users"],
+        request_body=UserAddressSerializer,
+        manual_parameters=[TOKEN, ADDRESS_ID]
+    )
+    @action(detail=False, methods=["put"])
+    def address_update(self, request):
+
+        try:
+
+            user, error = authenticate_and_get_user(request)
+
+            if error:
+                return error
+
+            address_id = request.data.get("addressId")
+
+            address = UserAddress.objects.filter(
+                id=address_id,
+                user=user
+            ).first()
+
+            if address is None:
+                return response_fun(
+                    RESPONSE_INVALID,
+                    {
+                        "message": "Address not found.",
+                        "code": ERROR_CODE_NOT_FOUND
+                    }
+                )
+
+            serializer = UserAddressSerializer(
+                address,
+                data=request.data,
+                partial=True
+            )
+
+            if serializer.is_valid():
+                serializer.save()
+
+                return response_fun(
+                    RESPONSE_SUCCESS,
+                    {
+                        "message": "Address updated successfully.",
+                        "data": serializer.data
+                    }
+                )
+
+            return response_fun(
+                RESPONSE_INVALID,
+                {
+                    "errors": serializer.errors,
+                    "code": ERROR_CODE_BAD_REQUEST
+                }
+            )
+        
+        except Exception as e:
+                return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
+        
+
+
+    @swagger_auto_schema(
+        tags=["Users"],
+        manual_parameters=[TOKEN, ADDRESS_ID]
+    )
+    @action(detail=False, methods=["delete"])
+    def address_delete(self, request):
+
+        try:
+
+            user, error = authenticate_and_get_user(request)
+
+            if error:
+                return error
+
+            address_id = request.query_params.get("addressId")
+
+            address = UserAddress.objects.filter(
+                id=address_id,
+                user=user
+            ).first()
+
+            if address is None:
+                return response_fun(
+                    RESPONSE_INVALID,
+                    {
+                        "message": "Address not found.",
+                        "code": ERROR_CODE_NOT_FOUND
+                    }
+                )
+
+            address.delete()
+
+            return response_fun(
+                RESPONSE_SUCCESS,
+                {
+                    "message": "Address deleted successfully."
+                }
+            )
+    
+         
+        except Exception as e:
+                return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
+        
