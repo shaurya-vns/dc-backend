@@ -8,30 +8,23 @@ class ProductPricingInline(admin.TabularInline):
 
 @admin.register(ProductModel)
 class ProductAdmin(admin.ModelAdmin):
-
-    list_display = (
-        "id",
+    list_display = [
+        'id',
+        "category",
         "name",
-        "plan_type",
-        "is_active",
-        "created_at",
-        'subOwner'
-    )
+        'plan_type',
+        'day'
+    ] + [
+        field.name for field in ProductModel._meta.fields
+        if field.name not in ("category", "name", "description", 'id', 'plan_type' , 'title', 'day')
+    ]
 
-    list_filter = (
-        "plan_type",
-        "is_active",
-    )
+    ordering = ["name"]
 
-    search_fields = (
-        "name",
-        "plan_name",
-        "short_description",
-    )
-
+    
     inlines = [ProductPricingInline]
 
-    ordering = ("-created_at",)
+
  
 
 @admin.register(ProductPricingModel)

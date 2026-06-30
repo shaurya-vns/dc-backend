@@ -2,8 +2,6 @@ from rest_framework import serializers
 from .models import ProductModel, OrderModel
 from product.serializers import ProductDetailSerializer
 
-
-
 class OrderListSerializer(serializers.ModelSerializer):
 
     product = ProductDetailSerializer(
@@ -20,4 +18,5 @@ class OrderListSerializer(serializers.ModelSerializer):
             "delivery_date",
             "status",
             "created_at",
+            'quantity'
         ) 

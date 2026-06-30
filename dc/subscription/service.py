@@ -3,6 +3,7 @@ from django.db import transaction
 
 from .models import SubscriptionModel
 from order.models import OrderModel
+from django.utils import timezone
 
 
 PLAN_TYPE_MAPPING = {
@@ -24,29 +25,48 @@ class SubscriptionService:
 
     @staticmethod
     @transaction.atomic
-    def create_subscription(user, product, pricing_options, start_date):
+    def create_subscription(user, product, address, pricing_options, start_date,  quantity=1, isApplyOffer=False):
+        
+        print('create_subscription ', isApplyOffer)
 
         total_days = pricing_options.days
-        amount = pricing_options.price
+        original_price = pricing_options.price * quantity
+        
+        offer = None
+        discount = 0
+        if isApplyOffer:
+            offer = product.offer  # ONE OFFER PER PRODUCT
+            if offer:
+                now = timezone.now()
+                if (offer.is_active and offer.start_date <= now <= offer.end_date):
+                    discount = offer.discount_amount
+
+                 
+        final_amount = max(original_price - discount, 0)
         end_date = start_date + timedelta(days=total_days)
 
         subscription = SubscriptionModel.objects.create(
             user=user,
-            total_days = total_days,
-            amount = amount,
-            start_date=start_date,
-            end_date=end_date,
+            subOwner=product.subOwner,
             product=product,
             pricing_options=pricing_options,
-            subOwner=product.subOwner
+            start_date=start_date,
+            end_date=end_date,
+            total_days=pricing_options.days,
+            amount=final_amount,
+            original_price = original_price,
+            discount_amount = discount,
+            quantity=quantity,
+            status=SubscriptionModel.ACTIVE,
+            address= address
         )
 
-        SubscriptionService.generate_orders(subscription, total_days)
+        SubscriptionService.generate_orders(subscription, total_days, quantity)
 
         return subscription
 
     @staticmethod
-    def generate_orders(subscription, total_days):
+    def generate_orders(subscription, total_days, quantity):
 
         meal_types = PLAN_TYPE_MAPPING.get(
             subscription.product.plan_type,
@@ -65,6 +85,7 @@ class SubscriptionService:
                         meal_type=meal_type,
                         delivery_date=current_date,
                         subOwner=subscription.subOwner,
+                        quantity = quantity
                     )
                 )
             current_date += timedelta(days=1)

@@ -58,26 +58,33 @@ class SubscriptionViewSet(viewsets.ViewSet):
                         )
                     
                     data = serializer.validated_data
-
                     product = data["product"]
-                    parent =  user.parent
-                    print('user parent ', parent)
-                    print('proudct owner ', product.subOwner)
+                    isApplyOffer = data["isApplyOffer"]
+                    address_id = data["addressId"]
 
-                    if product.subOwner_id != user.parent_id:
-                        return  response_fun(
+                    address = UserAddress.objects.filter(
+                            id=address_id,
+                            user=user
+                        ).first()
+                    
+                    if not address:
+                        return response_fun(
                             RESPONSE_INVALID,
                             {
-                                "message": 'Invalid access: product does not belong to your SubOwner.',
+                                "message": 'Inavlid address id',
                                 "code": ERROR_CODE_BAD_REQUEST
-                            } 
-                         )
+                            }
+                        )
 
                     subscription = SubscriptionService.create_subscription(
                         user = user,
-                        product = data["product"],
+                        product = product,
+                        address = address,
                         pricing_options=data["pricing_options"],
                         start_date=data["start_date"],
+                        quantity=data["quantity"],
+                        isApplyOffer=isApplyOffer,
+                        
                     )
 
                     return response_fun(RESPONSE_SUCCESS,{
@@ -91,6 +98,7 @@ class SubscriptionViewSet(viewsets.ViewSet):
                                 "start_date": subscription.start_date,
                                 "end_date": subscription.end_date,
                                 "status": subscription.status,
+                                "quantity": subscription.quantity,
                             }
                         }
                     )
@@ -119,7 +127,9 @@ class SubscriptionViewSet(viewsets.ViewSet):
                     return error
                  
                 qs = SubscriptionModel.objects.filter(
-                    user=user
+                    user=user,
+                    status = SubscriptionModel.ACTIVE
+                    
                 ).order_by("-id")
 
                 serializer = SubscriptionListSerializer(qs, many=True)

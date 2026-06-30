@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import ProductModel, ProductPricingModel
 from users.models import UserModel
+from offer.serializers import OfferSerializer
+from owner.serializers import SubOwnerSerializer
 
 
 class ProductPricingSerializer(serializers.ModelSerializer):
@@ -16,23 +18,23 @@ class ProductPricingSerializer(serializers.ModelSerializer):
 
 
 class ProductCreateSerializer(serializers.ModelSerializer):
-    subOwnerId = serializers.IntegerField(write_only=True)
+    subOwner = serializers.IntegerField(write_only=True)
     pricing_options = ProductPricingSerializer(many=True, required=False)
 
     class Meta:
         model = ProductModel
         fields = (
             "id",
-            "subOwnerId",
-            "name",
-            "plan_name",
+            "subOwner",
+            "category",
             "plan_type",
-            "short_description",
-            "include",
+            "name",
+            "title",
             "description",
             "is_active",
             "images",
             "pricing_options",
+            'offer'
         )
 
     def create(self, validated_data):
@@ -70,26 +72,41 @@ class ProductCreateSerializer(serializers.ModelSerializer):
 
 class ProductListSerializer(serializers.ModelSerializer):
     pricing_options = ProductPricingSerializer(many=True, read_only=True)
+    isSubscribed = serializers.BooleanField(read_only=True)
+    offer = OfferSerializer(read_only=True)
+    avg_rating = serializers.FloatField(read_only=True)
+    
+    class Meta:
+        model = ProductModel
+        fields = "__all__"
+
+
+class ProductDetailSerializer(serializers.ModelSerializer):
+
+    pricing_options = ProductPricingSerializer(many=True, read_only=True)
+    offer = OfferSerializer(read_only=True)
+    subOwner = SubOwnerSerializer(read_only=True)
+    avg_rating = serializers.FloatField(read_only=True)
 
     class Meta:
         model = ProductModel
         fields = "__all__"
 
 
-
-class ProductDetailSerializer(serializers.ModelSerializer):
-
-    
+        
+class ProductDetailSerializer1(serializers.ModelSerializer):
     class Meta:
         model = ProductModel
         fields = (
             "id",
-            "name",
-            "plan_name",
+            "subOwner",
+            "category",
             "plan_type",
-            "short_description",
-            "include",
+            "name",
+            "title",
             "description",
+            "is_active",
             "images",
-            
+            "pricing_options",
+            'offer'
         )

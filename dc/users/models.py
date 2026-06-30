@@ -131,4 +131,4 @@ class UserAddress(BaseModel):
 
 
     def __str__(self):
-        return self.address
+        return f"{self.houseNo} - {self.address}"

@@ -121,6 +121,9 @@ class UserViewSet(viewsets.ViewSet):
             if not user:
                 return response_fun(RESPONSE_INVALID, {'message': 'User does not exist', 'code': ERROR_CODE_UNAUTHORIZED})
             
+            if user.userType != UserModel.USER:
+                 return response_fun(RESPONSE_INVALID, {'message': 'Permission issue. Only for customer login!', 'code': ERROR_CODE_UNAUTHORIZED})
+            
             salt =  user.salt
             print('SSSSSS salt ', salt)
             

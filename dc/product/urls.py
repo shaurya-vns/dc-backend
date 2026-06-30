@@ -8,8 +8,5 @@ router = DefaultRouter()
 urlpatterns = [
     path('create', ProductViewSet.as_view({'post': 'create_product'})),
     path('list', ProductViewSet.as_view({'get': 'product_list'})),
-    path('subowner', ProductViewSet.as_view({'get': 'product_list_subowner'})),
-
-
-    
+    path('product_detail', ProductViewSet.as_view({'get': 'product_detail'}))
 ]

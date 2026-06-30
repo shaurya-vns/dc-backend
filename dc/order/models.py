@@ -61,6 +61,11 @@ class OrderModel(BaseModel):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+
+    quantity = models.PositiveSmallIntegerField(
+        default=1
+    )
+
     class Meta:
         unique_together = (
             "subscription",

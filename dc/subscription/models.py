@@ -1,7 +1,8 @@
 from django.db import models
 from dc.base_model import BaseModel
-from users.models import UserModel
+from users.models import UserModel, UserAddress
 from product.models import ProductModel, ProductPricingModel
+
 
 # Create your models here.
 
@@ -32,6 +33,12 @@ class SubscriptionModel(BaseModel):
         on_delete=models.PROTECT
     )
 
+    address = models.ForeignKey(
+        UserAddress,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True
+    )
 
     subOwner = models.ForeignKey(
         UserModel,
@@ -58,12 +65,29 @@ class SubscriptionModel(BaseModel):
         default=ACTIVE,
     )
 
-    amount = models.DecimalField(
+    is_active = models.BooleanField(default=True)
+
+    quantity = models.PositiveSmallIntegerField(
+        default=1
+    )
+    
+    original_price = models.DecimalField(
         max_digits=10,
-        decimal_places=2
+        decimal_places=2,
+        default=0.0
     )
 
-    is_active = models.BooleanField(default=True)
+    discount_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0
+    )
+
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.0
+    )
 
 
 

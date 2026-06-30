@@ -17,7 +17,10 @@ from dc.parameters import *
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
- 
+from django.db.models import Exists, OuterRef
+from django.db.models import Avg, DecimalField, FloatField
+from subscription.models import SubscriptionModel
+from django.db.models.functions import Coalesce
 
 from .models import ProductModel
 from .serializers import (
@@ -54,12 +57,19 @@ class ProductViewSet(viewsets.ViewSet):
         @swagger_auto_schema(
             tags=["Product"],
             operation_description="List of all products",
+            manual_parameters=[TOKEN]
         )
         @action(detail=False, methods=['get'])
         def product_list(self, request):
             try:
                 queryset = ProductModel.objects.filter(
                     is_active=True
+                ).annotate(
+                    avg_rating=Coalesce(
+                        Avg("ratings__rating"),
+                        0.0,
+                        output_field=DecimalField(max_digits=3, decimal_places=2)
+                    )
                 ).order_by("-created_at")
 
                 serializer = ProductListSerializer(
@@ -70,37 +80,105 @@ class ProductViewSet(viewsets.ViewSet):
                 return response_fun(RESPONSE_SUCCESS, {'data':serializer.data})
 
             except Exception as e:
+                print('eeeee ',e)
                 return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
             
+
+
+        @swagger_auto_schema(
+            tags=["Product"],
+            operation_description="Full Product Detail with SubOwner",
+            manual_parameters=[TOKEN, PRODUCT_ID]
+        )
+        @action(detail=False, methods=["get"])
+        def product_detail(self, request):
+            try:
+
+                product_id = request.query_params.get("productId")
+
+                if not product_id:
+                    return response_fun(RESPONSE_INVALID, {
+                        "message": "product_id is required",
+                        "code": ERROR_CODE_BAD_REQUEST
+                    })
+
+                product = ProductModel.objects.filter(
+                    id=product_id,
+                    is_active=True
+                ).select_related(
+                    "subOwner",
+                    "offer"
+                ).prefetch_related(
+                    "pricing_options",
+                    "subOwner__addresses",
+                ).annotate(
+                    avg_rating=Coalesce(
+                        Avg("ratings__rating"),
+                        0.0,
+                        output_field=FloatField()
+                    )
+                ).first()
+
+                if not product:
+                    return response_fun(RESPONSE_INVALID, {
+                        "message": "Product not found",
+                        "code": ERROR_CODE_NOT_FOUND
+                    })
+
+                serializer = ProductDetailSerializer(product)
+
+                return response_fun(RESPONSE_SUCCESS, {
+                    "data": serializer.data
+                })
+
+            except Exception as e:
+                print("eeeee", e)
+                return response_fun(RESPONSE_INVALID, {
+                    "message": "Something went wrong !!",
+                    "code": ERROR_CODE_NOT_FOUND
+                })
+
         @swagger_auto_schema(
             tags=["Product"],
             operation_description="List of all products by subowner",
-            manual_parameters=[SUB_OWNER_ID]
+            manual_parameters=[TOKEN, SUB_OWNER_ID]
         )
         @action(detail=False, methods=['get'])
         def product_list_subowner(self, request):
             try:
 
+                print('request ', request)
+                user, error = authenticate_and_get_user(request)
+                print('request user ', user)
+               
 
-                subOwnerId = request.GET.get("subOwnerId")
-                print('request subOwnerId ', subOwnerId)
-
+                if error:
+                    return error
+        
                 products = ProductModel.objects.filter(
-                    subOwner_id = subOwnerId,
-                    is_active=True
-                ).order_by("-created_at")
+                        is_active=True
+                    ).annotate(
+                        isSubscribed=Exists(
+                            SubscriptionModel.objects.filter(
+                                user=user,
+                                status=SubscriptionModel.ACTIVE,
+                                product=OuterRef("pk")
+                            )
+                        )
+                    ).order_by("-created_at")
 
-                
-                print('request products ', products)
+                for product in products:
+                    print('Product::::   ',product.name, product.isSubscribed)
 
                 serializer = ProductListSerializer(products,   many=True)
 
                 return response_fun(RESPONSE_SUCCESS,
                                     {
-                                          'message':"Subscription created successfully",
+                                          'message':"List of all products by subowner",
                                           'data': serializer.data
                                     })
             except Exception as e:
+                print('request e ', e)
                 return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
 
 

@@ -17,6 +17,23 @@ class ProductModel(BaseModel):
         ("breakfast_lunch_dinner", "Breakfast + Lunch + Dinner")
     )
 
+    CATEGORY = (
+        ("daily_ghar_ka_khana", "Daily Ghar Ka Khana Plans"),
+        ("pocket_friendly_meals", "Pocket Friendly Meals Plans"),
+        ("desi_rice_bowl_combos", "Desi Rice Bowl Combos Plans"),
+        ("fitness_meals", "Fitness Meal Plans"),
+    )
+
+    DAY_CHOICES = (
+        ("mon", "Monday"),
+        ("tue", "Tuesday"),
+        ("wed", "Wednesday"),
+        ("thu", "Thursday"),
+        ("fri", "Friday"),
+        ("sat", "Saturday"),
+        ("sun", "Sunday"),
+    )
+
     subOwner = models.ForeignKey(
         UserModel,
         on_delete=models.CASCADE,
@@ -26,22 +43,28 @@ class ProductModel(BaseModel):
         blank=True
     )
 
-    name = models.CharField( max_length=500,)
-    plan_name = models.CharField( max_length=500,)
-
+    category = models.CharField(
+        max_length=100,
+        choices=CATEGORY,
+        default="daily_ghar_ka_khana"
+    )
     
     plan_type = models.CharField(
         max_length=100,
-        choices=PLAN_TYPES
+        choices=PLAN_TYPES,
+        default="breakfast"
     )
 
-    short_description = models.TextField(
- 
-    )
+    day = models.CharField(
+        max_length=3,
+            choices=DAY_CHOICES,
+            default='mon'
+        )
 
-    include = models.TextField( )
+    name = models.CharField( max_length=500, default='')
+    title = models.CharField( max_length=500, default='')
 
-    description = models.TextField()
+    description = models.TextField(default='')
 
     is_active = models.BooleanField(
         default=True
@@ -52,6 +75,15 @@ class ProductModel(BaseModel):
         blank=True,
         default=list
     )
+
+    offer = models.ForeignKey(
+        "offer.OfferModel",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="products"
+    )
+
 
     def __str__(self):
         return self.name
@@ -89,3 +121,5 @@ class MealTypeModel(BaseModel):
 
     def __str__(self):
         return self.name
+    
+ 

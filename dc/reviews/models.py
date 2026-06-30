@@ -33,7 +33,7 @@ class ReviewModel(BaseModel):
     product = models.ForeignKey(
         ProductModel,
         on_delete=models.CASCADE,
-        related_name="product_reviews",
+        related_name="ratings",
     )
 
     rating = models.DecimalField(

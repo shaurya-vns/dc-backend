@@ -79,3 +79,34 @@ class SubOwnerAddressSerializer(serializers.ModelSerializer):
             ).exclude(id=instance.id).update(isDefault=False)
 
         return super().update(instance, validated_data)
+    
+
+class UserAddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserAddress
+        fields = "__all__"
+
+    
+class SubOwnerSerializer(serializers.ModelSerializer):
+    address = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserModel
+        fields = (
+            "id",
+            "name",
+            "phoneNumber",
+            "profileImage",
+            "address"
+        )
+
+    def get_address(self, obj):
+        default_address = obj.addresses.filter(isDefault=True).first()
+
+        if not default_address:
+            default_address = obj.addresses.first()
+
+        if default_address:
+            return UserAddressSerializer(default_address).data
+
+        return None

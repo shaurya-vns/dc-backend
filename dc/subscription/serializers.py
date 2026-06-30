@@ -26,6 +26,9 @@ PLAN_TYPE_MAPPING = {
 
 
 class SubscriptionCreateSerializer(serializers.ModelSerializer):
+    quantity = serializers.IntegerField(min_value=1, default=1)
+    isApplyOffer = serializers.BooleanField(default=False)
+    addressId = serializers.IntegerField(required=True)
 
     class Meta:
         model = SubscriptionModel
@@ -33,13 +36,20 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
             "product",
             "pricing_options",
             "start_date",
+            'quantity',
+            'isApplyOffer',
+            'addressId'
         )
 
     def validate(self, attrs):
 
         product = attrs["product"]
         pricing_option = attrs["pricing_options"]
+        isApplyOffer = attrs["isApplyOffer"]
+        addressId = attrs["addressId"]
+        print('SSSSS  isApplyOffer ',isApplyOffer)
 
+    
         if pricing_option.product_id != product.id:
             raise serializers.ValidationError(
                 "Selected pricing option does not belong to selected product."
@@ -101,4 +111,5 @@ class SubscriptionListSerializer(serializers.ModelSerializer):
             "amount",
             "status",
             "created_at",
+            'quantity'
         )

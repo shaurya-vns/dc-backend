@@ -27,7 +27,12 @@ SECRET_KEY = 'django-insecure-k@7hun5bll87k^#_%%pma1w^1(el9_9q+$+3-694twr(fkk1d!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    ".ngrok-free.app",
+]
 
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -55,6 +60,10 @@ CORS_ALLOW_HEADERS = [
 # To allow cookies (credentials) to be included in cross-origin requests
 CORS_ALLOW_CREDENTIALS = True
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://7e4e-182-77-58-183.ngrok-free.app",
+]
+
 # Application definition
 
 # Application definition
@@ -81,11 +90,13 @@ INSTALLED_APPS = [
     'delivery',
     'dashboard',
     'support',
-    'reviews'
+    'reviews',
+    'offer'
 
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -93,12 +104,17 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    
 ]
+ 
 
 ROOT_URLCONF = 'dc.urls'
+ 
 
-CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:8000' 
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "https://7e4e-182-77-58-183.ngrok-free.app",
 ]
 
 REST_FRAMEWORK = {
@@ -199,8 +215,10 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 
-
 SWAGGER_SETTINGS = {
+    "USE_SESSION_AUTH": False,
+    "DEFAULT_API_URL": "https://7e4e-182-77-58-183.ngrok-free.app",
+
     'SECURITY_DEFINITIONS': {
         'token': {
             'type': 'apiKey',
@@ -209,5 +227,4 @@ SWAGGER_SETTINGS = {
         }
     },
 }
-
-
+ 

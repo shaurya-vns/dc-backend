@@ -34,23 +34,10 @@ class SupportRequestModel(BaseModel):
         on_delete=models.CASCADE
     )
 
-    subscription = models.ForeignKey(
-        SubscriptionModel,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True
-    )
-
     request_type = models.CharField(
         max_length=50,
         choices=REQUEST_TYPES
     )
-
-    subject = models.CharField(
-        max_length=255
-    )
-
-    message = models.TextField()
 
     status = models.CharField(
         max_length=20,
@@ -62,6 +49,8 @@ class SupportRequestModel(BaseModel):
         blank=True,
         null=True
     )
+
+    message = models.TextField()
 
     def __str__(self):
         return f"{self.id} - {self.subject}"
