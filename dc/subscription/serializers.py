@@ -45,11 +45,7 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
 
         product = attrs["product"]
         pricing_option = attrs["pricing_options"]
-        isApplyOffer = attrs["isApplyOffer"]
-        addressId = attrs["addressId"]
-        print('SSSSS  isApplyOffer ',isApplyOffer)
-
-    
+        
         if pricing_option.product_id != product.id:
             raise serializers.ValidationError(
                 "Selected pricing option does not belong to selected product."

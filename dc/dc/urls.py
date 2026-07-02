@@ -30,7 +30,8 @@ urlpatterns = [
     path('api/delivery/',include('delivery.urls')),
     path('api/dashboard/',include('dashboard.urls')),
     path('api/reviews/',include('reviews.urls')),
-    
+    path('api/one-time-order/',include('onetimeorder.urls')),
+
 
    
    # Swagger URLs

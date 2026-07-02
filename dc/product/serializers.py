@@ -21,6 +21,12 @@ class ProductCreateSerializer(serializers.ModelSerializer):
     subOwner = serializers.IntegerField(write_only=True)
     pricing_options = ProductPricingSerializer(many=True, required=False)
 
+    product_price = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        coerce_to_string=False
+    )
+
     class Meta:
         model = ProductModel
         fields = (
@@ -34,7 +40,8 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             "is_active",
             "images",
             "pricing_options",
-            'offer'
+            'offer',
+            'product_price'
         )
 
     def create(self, validated_data):
@@ -75,6 +82,11 @@ class ProductListSerializer(serializers.ModelSerializer):
     isSubscribed = serializers.BooleanField(read_only=True)
     offer = OfferSerializer(read_only=True)
     avg_rating = serializers.FloatField(read_only=True)
+    product_price = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        coerce_to_string=False
+    )
     
     class Meta:
         model = ProductModel
@@ -87,26 +99,13 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     offer = OfferSerializer(read_only=True)
     subOwner = SubOwnerSerializer(read_only=True)
     avg_rating = serializers.FloatField(read_only=True)
+    isSubscribed = serializers.BooleanField(read_only=True)
+    product_price = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        coerce_to_string=False
+    )
 
     class Meta:
         model = ProductModel
         fields = "__all__"
-
-
-        
-class ProductDetailSerializer1(serializers.ModelSerializer):
-    class Meta:
-        model = ProductModel
-        fields = (
-            "id",
-            "subOwner",
-            "category",
-            "plan_type",
-            "name",
-            "title",
-            "description",
-            "is_active",
-            "images",
-            "pricing_options",
-            'offer'
-        )

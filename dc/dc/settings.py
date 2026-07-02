@@ -91,7 +91,8 @@ INSTALLED_APPS = [
     'dashboard',
     'support',
     'reviews',
-    'offer'
+    'offer',
+    'onetimeorder'
 
 ]
 

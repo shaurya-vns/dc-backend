@@ -9,6 +9,12 @@ from rest_framework import serializers
 
 class OfferSerializer(serializers.ModelSerializer):
 
+    discount_amount = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        coerce_to_string=False
+    )
+
     class Meta:
         model = OfferModel
         fields = "__all__"

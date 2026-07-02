@@ -37,33 +37,3 @@ class OfferModel(BaseModel):
             
     def __str__(self):
         return f"{self.code} - {self.name} - {self.discount_amount}"
-        
-
-class OfferUsageModel(models.Model):
-
-    user = models.ForeignKey(
-        "users.UserModel",
-        on_delete=models.CASCADE
-    )
-
-    offer = models.ForeignKey(
-        "offer.OfferModel",
-        on_delete=models.CASCADE
-    )
-
-    product = models.ForeignKey(
-        "product.ProductModel",
-        on_delete=models.CASCADE
-    )
-
-    subscription = models.ForeignKey(
-        "subscription.SubscriptionModel",
-        on_delete=models.CASCADE
-    )
-
-    discount_amount = models.DecimalField(
-        max_digits=10,
-        decimal_places=2
-    )
-
-    created_at = models.DateTimeField(auto_now_add=True)

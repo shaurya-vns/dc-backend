@@ -43,8 +43,11 @@ PRODUCT_ID = openapi.Parameter(
     required=True
 )
 
-
-
-
+PRODUCT_ORDER_ID = openapi.Parameter(
+    "orderId",
+    openapi.IN_QUERY,
+    type=openapi.TYPE_INTEGER,
+    required=True,
+)
 
 USER_ID = openapi.Parameter('userId', openapi.IN_QUERY, description="User ID", type=openapi.TYPE_INTEGER)

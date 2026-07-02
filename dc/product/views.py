@@ -64,15 +64,21 @@ class ProductViewSet(viewsets.ViewSet):
             try:
                 queryset = ProductModel.objects.filter(
                     is_active=True
+                ).select_related(
+                    "subOwner",
+                    "offer"
+                ).prefetch_related(
+                    "pricing_options",
+                    "subOwner__addresses",
                 ).annotate(
                     avg_rating=Coalesce(
                         Avg("ratings__rating"),
                         0.0,
-                        output_field=DecimalField(max_digits=3, decimal_places=2)
+                        output_field=FloatField()
                     )
                 ).order_by("-created_at")
 
-                serializer = ProductListSerializer(
+                serializer = ProductDetailSerializer(
                     queryset,
                     many=True
                 )
@@ -94,6 +100,14 @@ class ProductViewSet(viewsets.ViewSet):
         def product_detail(self, request):
             try:
 
+                print('request ', request)
+                user, error = authenticate_and_get_user(request)
+                print('request user ', user)
+               
+
+                if error:
+                    return error
+
                 product_id = request.query_params.get("productId")
 
                 if not product_id:
@@ -111,7 +125,15 @@ class ProductViewSet(viewsets.ViewSet):
                 ).prefetch_related(
                     "pricing_options",
                     "subOwner__addresses",
-                ).annotate(
+                ) .annotate(
+                        isSubscribed=Exists(
+                            SubscriptionModel.objects.filter(
+                                user=user,
+                                status=SubscriptionModel.ACTIVE,
+                                product=OuterRef("pk")
+                            )
+                        )
+                    ).annotate(
                     avg_rating=Coalesce(
                         Avg("ratings__rating"),
                         0.0,

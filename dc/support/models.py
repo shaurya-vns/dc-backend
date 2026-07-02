@@ -29,11 +29,6 @@ class SupportRequestModel(BaseModel):
         on_delete=models.CASCADE
     )
 
-    order = models.ForeignKey(
-        OrderModel,
-        on_delete=models.CASCADE
-    )
-
     request_type = models.CharField(
         max_length=50,
         choices=REQUEST_TYPES

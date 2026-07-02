@@ -43,14 +43,20 @@ class ProductModel(BaseModel):
         blank=True
     )
 
+    product_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0
+    )
+
     category = models.CharField(
-        max_length=100,
+        max_length=500,
         choices=CATEGORY,
         default="daily_ghar_ka_khana"
     )
     
     plan_type = models.CharField(
-        max_length=100,
+        max_length=500,
         choices=PLAN_TYPES,
         default="breakfast"
     )

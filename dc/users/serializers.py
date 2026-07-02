@@ -75,10 +75,19 @@ class ChangeSubscriptionSerializer(serializers.Serializer):
 
 class UserAddressSerializer(serializers.ModelSerializer):
 
-    latitude = serializers.FloatField()
-    longitude = serializers.FloatField()
     pincode = serializers.IntegerField()
 
+    latitude = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        coerce_to_string=False
+    )
+
+    longitude = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        coerce_to_string=False
+    )
 
     class Meta:
         model = UserAddress
