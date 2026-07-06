@@ -16,7 +16,21 @@ from dc.errors import *
 from dc.parameters import *
 from users.service import UserService
  
+from order.models import OrderModel
+from order.serializers import OrderListSerializer
+from onetimeorder.models import OneTimeOrderModel
+from onetimeorder.serializers import OneTimeOrderDetailSerializer
+from users.serializers import GetProfileSerializer
+from django.utils import timezone
 
+from django.db.models import (
+    Exists,
+    OuterRef,
+    Count,
+    Q,
+    F,
+)
+ 
 
 class UserViewSet(viewsets.ViewSet):
     @swagger_auto_schema(
@@ -371,10 +385,12 @@ class UserViewSet(viewsets.ViewSet):
             if error:
                 return error
 
-            address_id = request.data.get("addressId")
+            addressId = request.query_params.get('addressId')
+
+            print('address_id  ', addressId)
 
             address = UserAddress.objects.filter(
-                id=address_id,
+                id=addressId,
                 user=user
             ).first()
 
@@ -460,3 +476,167 @@ class UserViewSet(viewsets.ViewSet):
         except Exception as e:
                 return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
         
+
+    @swagger_auto_schema(
+        tags=["Users"],
+        manual_parameters=[TOKEN]
+    )
+    @action(detail=False, methods=["get"])
+    def get_profile(self, request):
+        try:
+            user, error = authenticate_and_get_user(request)
+
+            if error:
+                return error
+            print('ssss s', user)
+
+            serializer = CreateUserSerializer(instance=user)
+ 
+
+            return response_fun(
+                RESPONSE_SUCCESS,
+                {
+                    "message": "Profile fetched successfully.",
+                    "data": serializer.data
+                }
+            )
+
+        except Exception as e:
+            print('ddddsd   ', e)
+            return response_fun(
+                RESPONSE_INVALID,
+                {
+                    "message": str(e),  
+                    "code": ERROR_CODE_NOT_FOUND
+                }
+            )
+            
+
+    @swagger_auto_schema(
+        tags=["Users"],
+        request_body=UpdateProfileSerializer,
+        manual_parameters=[TOKEN]
+    )
+    @action(detail=False, methods=["put"])
+    def update_profile(self, request):
+        try:
+            user, error = authenticate_and_get_user(request)
+
+            if error:
+                return error
+
+            serializer = UpdateProfileSerializer(
+                instance=user,
+                data=request.data,
+                partial=True,   # Allows partial updates
+            )
+
+            if serializer.is_valid():
+                serializer.save()
+
+                return response_fun(
+                    RESPONSE_SUCCESS,
+                    {
+                        "message": "Profile updated successfully.",
+                        "data": serializer.data
+                    }
+                )
+
+            return response_fun(
+                RESPONSE_INVALID,
+                {
+                    "errors": serializer.errors,
+                    "code": ERROR_CODE_BAD_REQUEST
+                }
+            )
+
+        except Exception as e:
+            print(e)
+            return response_fun(
+                RESPONSE_INVALID,
+                {
+                    "message": str(e),
+                    "code": ERROR_CODE_NOT_FOUND
+                }
+            )
+        
+
+    @swagger_auto_schema(
+        tags=["Users"],
+        operation_description="Get all customers sorted by today's orders",
+        responses={200: UserListSerializer(many=True)},
+        manual_parameters=[TOKEN]
+    )
+    @action(detail=False, methods=["get"])
+    def get_all_profile(self, request):
+                try:
+                    user, error = authenticate_and_get_user(request)
+
+                    if error:
+                        return error
+
+                    if user.userType != UserModel.SUB_OWNER:
+                        return response_fun(
+                            RESPONSE_INVALID,
+                            {
+                                "message": "Only Sub Owner has permission.",
+                                "code": RESPONSE_INVALID,
+                            }
+                        )
+
+                    today = timezone.localdate()
+
+                    users = (
+                        UserModel.objects.filter(
+                            userType=UserModel.USER
+                        )
+                        .annotate(
+            
+                            subscription_order_count=Count(
+                                "ordermodel",
+                                filter=Q(
+                                    ordermodel__delivery_date=today,
+                                    ordermodel__status=OrderModel.PENDING,
+                                ),
+                                distinct=True,
+                            ),
+                            one_time_order_count=Count(
+                                "onetimeordermodel",
+                                filter=Q(
+                                    onetimeordermodel__delivery_date=today,
+                                    onetimeordermodel__status=OneTimeOrderModel.PENDING,
+                                ),
+                                distinct=True,
+                            ),
+                        )
+                        .annotate(
+                            total_order_count=F("subscription_order_count")
+                            + F("one_time_order_count")
+                        )
+                        .order_by(
+                            "-total_order_count",
+                            "name",
+                        )
+                    )
+
+                    serializer = UserListSerializer(users, many=True)
+
+                    return response_fun(
+                        RESPONSE_SUCCESS,
+                        {
+                            "message": "Customer list fetched successfully.",
+                            "data": serializer.data,
+                        },
+                    )
+
+                except Exception as e:
+                    return response_fun(
+                        RESPONSE_INVALID,
+                        {
+                            "message": str(e),
+                            "code": ERROR_CODE_NOT_FOUND,
+                        },
+                    )
+                
+
+            

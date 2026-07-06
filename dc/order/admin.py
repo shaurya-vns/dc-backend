@@ -11,8 +11,6 @@ class OrderAdmin(admin.ModelAdmin):
         "user__phone",
         "user__name",
         "subscription__id",
-        "subOwner__phone",
-        "subOwner__name",
     )
 
     list_filter = (
@@ -20,12 +18,10 @@ class OrderAdmin(admin.ModelAdmin):
         "meal_type",
         "delivery_date",
         "created_at",
-        "subOwner",
     )
 
     list_select_related = (
         "user",
-        "subOwner",
         "subscription",
     )
 

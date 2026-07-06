@@ -8,7 +8,7 @@ from order.models import OrderModel
 
 from datetime import timedelta
 from product.serializers import ProductDetailSerializer, ProductPricingSerializer
-
+from users.serializers import UserAddressSerializer, GetProfileSerializer
 
 PLAN_TYPE_MAPPING = {
     "breakfast": ["breakfast"],
@@ -50,8 +50,6 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "Selected pricing option does not belong to selected product."
             )
-
-        attrs["total_days"] = pricing_option.days
         attrs["amount"] = pricing_option.price
         attrs["end_date"] = (
             attrs["start_date"] +
@@ -90,10 +88,35 @@ class SubscriptionListSerializer(serializers.ModelSerializer):
         read_only=True
     )
 
+    user = GetProfileSerializer(
+        read_only=True
+    )
+
+    address = UserAddressSerializer(read_only=True)
+
     pricing_detail = ProductPricingSerializer(
         source="pricing_options",
         read_only=True
     )
+
+    original_price = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        coerce_to_string=False
+    )
+
+    discount_amount = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        coerce_to_string=False
+    )
+
+    amount = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        coerce_to_string=False
+    )
+
 
     class Meta:
         model = SubscriptionModel
@@ -103,9 +126,15 @@ class SubscriptionListSerializer(serializers.ModelSerializer):
             "pricing_detail",
             "start_date",
             "end_date",
-            "total_days",
-            "amount",
             "status",
-            "created_at",
-            'quantity'
+            'quantity',
+            'payment_status',
+            'original_price',
+            'discount_amount',
+            "amount",
+            'address',
+            'sub_number',
+            'user'
         )
+
+ 

@@ -6,11 +6,7 @@ from django.urls import path,include
 router = DefaultRouter()
 
 urlpatterns = [
-    path("my-orders", OrderViewSet.as_view({"get": "my_orders"})),
-    path("order-detail", OrderViewSet.as_view({"get": "order_detail"})),
-    path("upcoming-orders", OrderViewSet.as_view({"get": "upcoming_orders"})),
-    path("today-orders", OrderViewSet.as_view({"get": "today_orders"})),
-    path("next-day-order", OrderViewSet.as_view({"get": "next_day_orders"})),
-    path("subscription", OrderViewSet.as_view({"get": "get_order_by_subscription_id"})),
-    path("history", OrderViewSet.as_view({"get": "order_history"})),
+    path("list", OrderViewSet.as_view({"get": "subscription_user_order_list"})),
+    path("me", OrderViewSet.as_view({"get": "subscription_me_order_list"})),
+    path('update', OrderViewSet.as_view({'put': 'update_sub_order_status'})),
 ]

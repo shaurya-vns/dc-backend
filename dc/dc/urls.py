@@ -23,14 +23,13 @@ schema_view = get_schema_view(
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/users/',include('users.urls')),
-    path('api/subowner/',include('owner.urls')),
-    path('api/product/',include('product.urls')),
-    path('api/subscription/',include('subscription.urls')),
-    path('api/order/',include('order.urls')),
-    path('api/delivery/',include('delivery.urls')),
+    path('api/sub-owners/',include('owner.urls')),
+    path('api/products/',include('product.urls')),
+    path('api/subscriptions/',include('subscription.urls')),
+    path('api/subscription-orders/',include('order.urls')),
     path('api/dashboard/',include('dashboard.urls')),
     path('api/reviews/',include('reviews.urls')),
-    path('api/one-time-order/',include('onetimeorder.urls')),
+    path('api/one-time-orders/',include('onetimeorder.urls')),
 
 
    

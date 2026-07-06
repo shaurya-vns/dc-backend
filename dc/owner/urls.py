@@ -6,13 +6,19 @@ from django.urls import path
 router = DefaultRouter()
 
 urlpatterns = [
-    path('register', OwnerViewSet.as_view({'post': 'register_sub_owner'})),
-    path('login', OwnerViewSet.as_view({'post': 'login_sub_owner'})),
-    path('subscription', OwnerViewSet.as_view({'get': 'subscription_list'})),
-    path('customer', OwnerViewSet.as_view({'get': 'customer_list'})),
-    path('address_add', OwnerViewSet.as_view({'post': 'address_add'})), 
-    path('address_list', OwnerViewSet.as_view({'get': 'address_list'})), 
-    path('address_update', OwnerViewSet.as_view({'put': 'address_update'})), 
-    path('address_delete', OwnerViewSet.as_view({'delete': 'address_delete'})), 
-    path('address_default', OwnerViewSet.as_view({'get': 'address_default'})), 
+    path("register/", OwnerViewSet.as_view({"post": "register_sub_owner"})),
+    path("login/", OwnerViewSet.as_view({"post": "login_sub_owner"})),
+
+    # 📍 ADDRESSES (REST STYLE)
+    path("addresses/", OwnerViewSet.as_view({"get": "address_list", "post": "address_add"})),
+
+    path("addresses/<int:pk>/", OwnerViewSet.as_view({
+        "put": "address_update",
+        "delete": "address_delete"
+    })),
+
+    path("addresses/default/", OwnerViewSet.as_view({"get": "address_default"})),
+
+    # 📦 SUBSCRIPTIONS
+    path("subscriptions/", OwnerViewSet.as_view({"get": "subscriptions_list_by_user_id"})),
 ]

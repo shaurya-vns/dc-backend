@@ -6,6 +6,7 @@ from product.serializers import ProductDetailSerializer
 from users.serializers import UserAddressSerializer
 from offer.serializers import OfferSerializer
 from owner.serializers import SubOwnerSerializer
+from users.serializers import GetProfileSerializer
 
 
 
@@ -52,32 +53,35 @@ class OneTimeOrderDetailSerializer(serializers.ModelSerializer):
     product = ProductDetailSerializer(read_only=True)
     offer = OfferSerializer(read_only=True)
     address = UserAddressSerializer(read_only=True)
+    user = GetProfileSerializer(read_only=True)
     subOwner = SubOwnerSerializer(read_only=True)
+
+    amount = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        coerce_to_string=False
+    )
+
+    final_amount = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        coerce_to_string=False
+    )
 
     class Meta:
         model = OneTimeOrderModel
         fields = (
             "id",
-            "created_at",
-            "updated_at",
-
             "status",
-
             "user",
             "subOwner",
-
             "product",
-
             "quantity",
-
             "amount",
-            "discount_amount",
             "final_amount",
-
             "offer",
-
             "address",
-
             "meal_type",
             "delivery_date",
+            'order_number'
         )

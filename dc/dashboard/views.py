@@ -18,10 +18,61 @@ from order.serializers import OrderListSerializer
 from support.serializers import UpdateSupportRequestSerializer
 from support.models import SupportRequestModel
 from users.models import UserModel
-from users.serializers import SubOwnerListSerializer
-  
+from users.serializers import SubOwnerListSerializer, LogInSerializer, CreateUserSerializer
+from dc.constant import RESPONSE_INVALID, RESPONSE_SUCCESS, RESPONSE_ERROR
+from dc.errors import ERROR_CODE_UNAUTHORIZED, ERROR_CODE_NOT_FOUND
+from users.utils import generate_salt, check_password, encode_token, store_token, check_password_match
+from dc.utils import response_fun
 
 class DashboardViewSet(viewsets.ViewSet):
+        
+
+        @swagger_auto_schema(
+            request_body=LogInSerializer,
+            tags=["Dashboard"]
+        )        
+        @action(detail=False, methods=['post'])
+        def login_admin_user(self, request):
+            try:
+                phoneNumber = request.data.get('phoneNumber').lower()
+                print('SSSSSS ', phoneNumber)
+                password = request.data.get('password')
+                print('SSSSSS password ', password)
+                user = UserModel.objects.filter(phoneNumber=phoneNumber).first()
+            
+                if not user:
+                    return response_fun(RESPONSE_INVALID, {'message': 'User does not exist', 'code': ERROR_CODE_UNAUTHORIZED})
+                
+                if user.userType != UserModel.OWNER:
+                    return response_fun(RESPONSE_INVALID, {'message': 'Permission issue. Only for customer login!', 'code': ERROR_CODE_UNAUTHORIZED})
+                
+                salt =  user.salt
+                print('SSSSSS salt ', salt)
+                
+                hashed_password =  make_password(password, salt)
+                print('SSSSSS hashed_password ',  hashed_password)
+                print('SSSSSS user.password ', user.password)
+                if not check_password(hashed_password, user.password):
+                    return response_fun(RESPONSE_INVALID, {'message': "Invalid credentials", 'code': ERROR_CODE_UNAUTHORIZED})
+                
+                payload =  {'phoneNumber': phoneNumber, "userId": user.id}
+                token = encode_token(payload)
+                store_token(phoneNumber, token)
+
+                user_serializer =  CreateUserSerializer(user)
+
+                response_data = {
+                        'message': "Login successful",
+                        'token': token,
+                        'data': user_serializer.data
+                    }
+                return response_fun(RESPONSE_SUCCESS, response_data)
+        
+            except Exception as e:
+                print('SSSSSSSS Exception ', e)
+                return response_fun(RESPONSE_ERROR, {'message': str(e), 'code': ERROR_CODE_UNAUTHORIZED})
+        
+
         @swagger_auto_schema(
             tags=["Dashboard"],
             operation_description="Get dashboard",

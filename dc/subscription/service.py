@@ -47,45 +47,53 @@ class SubscriptionService:
 
         subscription = SubscriptionModel.objects.create(
             user=user,
-            subOwner=product.subOwner,
             product=product,
             pricing_options=pricing_options,
             start_date=start_date,
             end_date=end_date,
-            total_days=pricing_options.days,
             amount=final_amount,
             original_price = original_price,
             discount_amount = discount,
             quantity=quantity,
-            status=SubscriptionModel.ACTIVE,
+            status=SubscriptionModel.PENDING,
             address= address
         )
-
-        SubscriptionService.generate_orders(subscription, total_days, quantity)
 
         return subscription
 
     @staticmethod
-    def generate_orders(subscription, total_days, quantity):
+    def generate_orders(user, subscription):
+
+        start_date = timezone.now().date()
+
+        subscription.payment_status = SubscriptionModel.PAYMENT_RECEIVED
+        subscription.status = SubscriptionModel.ACTIVE
+
+        subscription.start_date = start_date
+        subscription.end_date = start_date + timedelta(days=subscription.pricing_options.days)
+
+        subscription.save()
 
         meal_types = PLAN_TYPE_MAPPING.get(
             subscription.product.plan_type,
             []
         )
 
-        current_date = subscription.start_date
+        current_date = start_date
         orders = []
+
+        total_days =  subscription.pricing_options.days
+        quantity =  subscription.quantity
 
         for _ in range(total_days):
             for meal_type in meal_types:
                 orders.append(
                     OrderModel(
                         subscription=subscription,
-                        user=subscription.user,
+                        user=user,
                         meal_type=meal_type,
                         delivery_date=current_date,
-                        subOwner=subscription.subOwner,
-                        quantity = quantity
+                        quantity = quantity,
                     )
                 )
             current_date += timedelta(days=1)

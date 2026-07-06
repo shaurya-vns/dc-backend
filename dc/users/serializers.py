@@ -17,6 +17,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
             "deviceId",
             "salt",
             "subOwnerId",
+            'userType'
         )
 
         extra_kwargs = {
@@ -77,18 +78,6 @@ class UserAddressSerializer(serializers.ModelSerializer):
 
     pincode = serializers.IntegerField()
 
-    latitude = serializers.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        coerce_to_string=False
-    )
-
-    longitude = serializers.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        coerce_to_string=False
-    )
-
     class Meta:
         model = UserAddress
         fields = (
@@ -103,6 +92,7 @@ class UserAddressSerializer(serializers.ModelSerializer):
             "latitude",
             "longitude",
             "isDefault",
+            'phoneNumber'
         )
 
     def create(self, validated_data):
@@ -127,3 +117,42 @@ class UserAddressSerializer(serializers.ModelSerializer):
             ).exclude(id=instance.id).update(isDefault=False)
 
         return super().update(instance, validated_data)
+    
+
+class UpdateProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserModel
+        fields = [
+            "name",
+            "profileImage"
+        ]
+
+
+
+class GetProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserModel
+        fields = [
+            'id',
+            "name",
+            "profileImage",
+            'phoneNumber'
+        ]
+
+class UserListSerializer(serializers.ModelSerializer):
+    subscription_order_count = serializers.IntegerField(read_only=True)
+    one_time_order_count = serializers.IntegerField(read_only=True)
+    total_order_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = UserModel
+        fields = (
+            "id",
+            "name",
+            "phoneNumber",
+            "subscription_order_count",
+            "one_time_order_count",
+            "total_order_count",
+        )

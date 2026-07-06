@@ -14,6 +14,7 @@ urlpatterns = [
     path('address_update', UserViewSet.as_view({'put': 'address_update'})), 
     path('address_delete', UserViewSet.as_view({'delete': 'address_delete'})), 
     path('address_default', UserViewSet.as_view({'get': 'address_default'})), 
-
-    
+    path('profile', UserViewSet.as_view({'get': 'get_profile'})), 
+    path('update', UserViewSet.as_view({'put': 'update_profile'})), 
+    path('all', UserViewSet.as_view({'get': 'get_all_profile'})),     
 ]

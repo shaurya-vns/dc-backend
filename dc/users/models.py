@@ -27,7 +27,8 @@ class UserModel(BaseModel):
     password = models.CharField(max_length=255)
 
     userType = models.IntegerField(
-        choices=USER_TYPES
+        choices=USER_TYPES,
+        default=SUB_OWNER
     )
 
     platform = models.IntegerField(
@@ -92,6 +93,11 @@ class UserAddress(BaseModel):
         default=UserModel.USER
     )
 
+    phoneNumber = models.CharField(
+        max_length=10,
+        
+    )
+
     addressType = models.IntegerField(
         choices=ADDRESS_TYPES,
         default=HOME,
@@ -131,4 +137,4 @@ class UserAddress(BaseModel):
 
 
     def __str__(self):
-        return f"{self.houseNo} - {self.address}"
+        return f"{self.houseNo} - {self.address} - {self.phoneNumber}"

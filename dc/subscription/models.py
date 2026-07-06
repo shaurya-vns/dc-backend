@@ -2,26 +2,45 @@ from django.db import models
 from dc.base_model import BaseModel
 from users.models import UserModel, UserAddress
 from product.models import ProductModel, ProductPricingModel
-
+import random
+import string
 
 # Create your models here.
 
 class SubscriptionModel(BaseModel):
 
-    ACTIVE = 1
-    PAUSE =  2
-    COMPLETED = 3
-    CANCELLED = 4
-    TRANSFERRED = 5
-
+    PENDING = 1
+    ACTIVE = 2
+    PAUSED = 3
+    COMPLETED = 4
+    CANCELLED = 5
+    TRANSFERRED = 6
+ 
     STATUS_CHOICES = (
+        (PENDING, "Pending"),
         (ACTIVE, "Active"),
-         (PAUSE, "Pause"),
+        (PAUSED, "Paused"),
         (COMPLETED, "Completed"),
         (CANCELLED, "Cancelled"),
         (TRANSFERRED, "Transferred"),
     )
 
+    PAYMENT_PENDING = 1
+    PAYMENT_RECEIVED = 2
+    PAYMENT_FAILED = 3
+    PAYMENT_REFUNDED = 4
+
+    PAYMENT_STATUS_CHOICES = (
+        (PAYMENT_PENDING, "Pending"),
+        (PAYMENT_RECEIVED, "Received"),
+        (PAYMENT_FAILED, "Failed"),
+        (PAYMENT_REFUNDED, "Refunded"),
+    )
+
+    payment_status = models.PositiveSmallIntegerField(
+        choices=PAYMENT_STATUS_CHOICES,
+        default=PAYMENT_PENDING,
+    )
 
     user = models.ForeignKey(
         UserModel,
@@ -40,14 +59,6 @@ class SubscriptionModel(BaseModel):
         blank=True
     )
 
-    subOwner = models.ForeignKey(
-        UserModel,
-        on_delete=models.CASCADE,
-        related_name="customer_subscriptions",
-        limit_choices_to={"userType": UserModel.SUB_OWNER},
-        default=UserModel.SUB_OWNER
-    )
-
     pricing_options = models.ForeignKey(
         ProductPricingModel,
         on_delete=models.PROTECT
@@ -57,15 +68,11 @@ class SubscriptionModel(BaseModel):
 
     end_date = models.DateField()
 
-    total_days = models.PositiveIntegerField()
-
 
     status = models.PositiveSmallIntegerField(
         choices=STATUS_CHOICES,
         default=ACTIVE,
     )
-
-    is_active = models.BooleanField(default=True)
 
     quantity = models.PositiveSmallIntegerField(
         default=1
@@ -88,6 +95,34 @@ class SubscriptionModel(BaseModel):
         decimal_places=2,
         default=0.0
     )
+
+
+    sub_number = models.CharField(
+            max_length=6,
+            unique=True,
+            blank=True,
+            null=True,
+        )
+
+    @staticmethod
+    def generate_sub_number():
+        while True:
+            code = ''.join(
+                random.choices(
+                    string.ascii_uppercase + string.digits,
+                    k=6
+                )
+            )
+            if not SubscriptionModel.objects.filter(sub_number=code).exists():
+                return code
+
+    def save(self, *args, **kwargs):
+        if not self.sub_number:
+            self.sub_number = self.generate_sub_number()
+
+        super().save(*args, **kwargs)
+
+ 
 
 
 

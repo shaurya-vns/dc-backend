@@ -5,24 +5,24 @@ from users.models import UserModel
 from product.models import ProductPricingModel
 from users.models import UserAddress
 from offer.models import OfferModel
+import random
+import string
 
 
 class OneTimeOrderModel(BaseModel):
 
     PENDING = 1
-    ACCEPTED = 2
-    PREPARING = 3
-    OUT_FOR_DELIVERY = 4
-    DELIVERED = 5
-    CANCELLED = 6
+    PREPARING = 2
+    DELIVERED = 3
+    CANCELLED = 4
+    SKIPPED =  5
 
     STATUS_CHOICES = (
         (PENDING, "Pending"),
-        (ACCEPTED, "Accepted"),
         (PREPARING, "Preparing"),
-        (OUT_FOR_DELIVERY, "Out For Delivery"),
         (DELIVERED, "Delivered"),
         (CANCELLED, "Cancelled"),
+        (SKIPPED, "Skipped"),
     )
 
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
@@ -66,3 +66,28 @@ class OneTimeOrderModel(BaseModel):
         choices=STATUS_CHOICES,
         default=PENDING
     )
+
+    order_number =models.CharField(
+            max_length=6,
+            unique=True,
+            blank=True,
+            null=True
+        )
+
+    @staticmethod
+    def generate_order_number():
+        while True:
+            code = ''.join(
+                random.choices(
+                    string.ascii_uppercase + string.digits,
+                    k=6
+                )
+            )
+            if not OneTimeOrderModel.objects.filter(order_number=code).exists():
+                return code
+
+    def save(self, *args, **kwargs):
+        if not self.order_number:
+            self.order_number = self.generate_order_number()
+
+        super().save(*args, **kwargs)

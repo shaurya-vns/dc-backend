@@ -7,7 +7,6 @@ router = DefaultRouter()
 
 urlpatterns = [
     path("create", OneTimeOrderViewSet.as_view({"post": "create_order"})),
-    path("my_orders", OneTimeOrderViewSet.as_view({"get": "my_orders"})),
-    path("order_detail", OneTimeOrderViewSet.as_view({"get": "order_detail"})),
-    path("today_orders", OneTimeOrderViewSet.as_view({"get": "today_orders"})),
+    path("list", OneTimeOrderViewSet.as_view({"get": "user_one_time_order_list"})),
+    path('update', OneTimeOrderViewSet.as_view({'put': 'update_onetime_order_status'})), 
 ]

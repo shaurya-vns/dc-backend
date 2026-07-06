@@ -15,6 +15,7 @@ from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
 from django.db import transaction
+from owner.serializers import UpdateOrderStatusSerializer
   
 from onetimeorder.serializers import OneTimeOrderCreateSerializer
 from onetimeorder.serializers import OneTimeOrderDetailSerializer
@@ -90,51 +91,9 @@ class OneTimeOrderViewSet(viewsets.ViewSet):
                 )
 
             quantity = data["quantity"]
-
-            # ------------------------------------
-            # Calculate price from Product Pricing
-            # ------------------------------------
-
-            pricing = product.pricing_options.order_by("days").first()
-
-            if not pricing:
-                return response_fun(
-                    RESPONSE_INVALID,
-                    {
-                        "message": "Pricing not available.",
-                        "code": ERROR_CODE_BAD_REQUEST
-                    }
-                )
-
-            per_day_price = (
-                Decimal(pricing.price) /
-                Decimal(pricing.days)
-            )
-
-            amount = per_day_price * quantity
-
-            # ------------------------------------
-            # Offer
-            # ------------------------------------
-
-            discount = Decimal("0.00")
-            offer = None
-
-            if data["isApplyOffer"]:
-
-                offer = product.offer
-
-                if (
-                    offer
-                    and offer.is_active
-                    and offer.start_date <= timezone.now() <= offer.end_date
-                ):
-                    discount = offer.discount_amount
-
-            final_amount = max(
-                amount - discount,
-                Decimal("0.00")
-            )
+            delivery_date = data["delivery_date"]
+    
+            final_amount =  product.product_price * quantity
 
             order = OneTimeOrderModel.objects.create(
                 user=user,
@@ -142,11 +101,9 @@ class OneTimeOrderViewSet(viewsets.ViewSet):
                 product=product,
                 address=address,
                 quantity=quantity,
-                amount=amount,
-                discount_amount=discount,
+                amount=product.product_price,
                 final_amount=final_amount,
-                offer=offer,
-                delivery_date=timezone.localdate(),
+                delivery_date=delivery_date,
                 meal_type=product.plan_type,
                 status=OneTimeOrderModel.PENDING,
             )
@@ -157,7 +114,7 @@ class OneTimeOrderViewSet(viewsets.ViewSet):
                     "message": "Order placed successfully.",
                     "data": {
                         "id": order.id,
-                        "amount": order.amount,
+                        "orderNumber": order.order_number,
                         "discount": order.discount_amount,
                         "final_amount": order.final_amount,
                         "status": order.status
@@ -177,146 +134,147 @@ class OneTimeOrderViewSet(viewsets.ViewSet):
             )
         
     @swagger_auto_schema(
-        tags=["One Time Order"],
-        operation_description="My One-Time Orders",
-        manual_parameters=[TOKEN]
+       tags=["One Time Order"],
+            operation_description="Get User all One-Time Orders",
+            manual_parameters=[TOKEN, USER_ID, DELIVERY_DATE]
     )
     @action(detail=False, methods=["get"])
-    def my_orders(self, request):
-        try:
-            user, error = authenticate_and_get_user(request)
+    def user_one_time_order_list(self, request):
+                try:
+                    user, error = authenticate_and_get_user(request)
 
-            if error:
-                return error
+                    if error:
+                        return error
+                    
+            
+                    user_id = request.query_params.get("userId")
+                    delivery_date = request.query_params.get("delivery_date")
 
-            orders = OneTimeOrderModel.objects.filter(
-                user=user
-            ).select_related(
-                "product",
-                "offer",
-                "address"
-            ).order_by("-created_at")
+                    if not user_id:
+                        return response_fun(
+                            RESPONSE_INVALID,
+                            {"message": "user_id is required"},
+                        )
+                    
 
-            serializer = OneTimeOrderDetailSerializer(
-                orders,
-                many=True
-            )
-
-            return response_fun(
-                RESPONSE_SUCCESS,
-                {
-                    "data": serializer.data
-                }
-            )
-
-        except Exception as e:
-            print(e)
-            return response_fun(
-                RESPONSE_INVALID,
-                {
-                    "message": str(e),
-                    "code": ERROR_CODE_BAD_REQUEST
-                }
-            )
-        
-    @swagger_auto_schema(
-        tags=["One Time Order"],
-        operation_description="Order Detail",
-        manual_parameters=[TOKEN, PRODUCT_ORDER_ID]
-    )
-    @action(detail=False, methods=["get"])
-    def order_detail(self, request):
-
-        try:
-            user, error = authenticate_and_get_user(request)
-
-            if error:
-                return error
-
-            order_id = request.GET.get("orderId")
-
-            order = OneTimeOrderModel.objects.select_related(
-                "product",
-                "offer",
-                "address"
-            ).filter(
-                id=order_id,
-                user=user
-            ).first()
-
-            if not order:
-                return response_fun(
-                    RESPONSE_INVALID,
-                    {
-                        "message": "Order not found",
-                        "code": ERROR_CODE_NOT_FOUND
+                    filters = {
+                        "user_id": user_id,
+                        "status": OneTimeOrderModel.PENDING,
                     }
-                )
 
-            serializer = OneTimeOrderDetailSerializer(order)
+                    # ✅ OPTIONAL DATE FILTER
+                    if delivery_date:
+                        filters["delivery_date"] = delivery_date
+                    else:
+                        # default = today
+                        filters["delivery_date"] = timezone.localdate()
 
-            return response_fun(
-                RESPONSE_SUCCESS,
-                {
-                    "data": serializer.data
-                }
-            )
+                    
+                    orders = OneTimeOrderModel.objects.filter(
+                            **filters
+                        ).select_related(
+                            "product",
+                            "offer",
+                            "address"
+                        ).order_by("-delivery_date")
 
-        except Exception as e:
-            print(e)
 
-            return response_fun(
-                RESPONSE_INVALID,
-                {
-                    "message": str(e),
-                    "code": ERROR_CODE_BAD_REQUEST
-                }
-            )
-        
+                    serializer = OneTimeOrderDetailSerializer(
+                        orders,
+                        many=True
+                    )
+
+                    return response_fun(
+                        RESPONSE_SUCCESS,
+                        {
+                            "data": serializer.data
+                        }
+                    )
+
+                except Exception as e:
+                    print(e)
+                    return response_fun(
+                        RESPONSE_INVALID,
+                        {
+                            "message": str(e),
+                            "code": ERROR_CODE_BAD_REQUEST
+                        }
+                    )
+                
+
     @swagger_auto_schema(
-        tags=["One Time Order"],
-        operation_description="Today's Orders",
-        manual_parameters=[TOKEN]
-    )
-    @action(detail=False, methods=["get"])
-    def today_orders(self, request):
-
-        try:
-            user, error = authenticate_and_get_user(request)
-
-            if error:
-                return error
-
-            today = timezone.localdate()
-
-            orders = OneTimeOrderModel.objects.filter(
-                user=user,
-                delivery_date=today
-            ).select_related(
-                "product",
-                "offer",
-                "address"
-            ).order_by("created_at")
-
-            serializer = OneTimeOrderDetailSerializer(
-                orders,
-                many=True
+                request_body=UpdateOrderStatusSerializer,
+                tags=["One Time Order"],
+                operation_description="Update one time order status",
+                responses={200: UpdateOrderStatusSerializer},
+                manual_parameters=[TOKEN, ORDER_ID]
             )
+    @action(detail=False, methods=["put"])
+    def update_onetime_order_status(self, request):
+                try:
+                    user, error = authenticate_and_get_user(request)
 
-            return response_fun(
-                RESPONSE_SUCCESS,
-                {
-                    "data": serializer.data
-                }
-            )
+                    if error:
+                        return error
+                    
+                    if user.userType != UserModel.SUB_OWNER:
+                        return response_fun(
+                            RESPONSE_INVALID,
+                            {
+                                "message": "Only sub owner is aloowed!.",
+                                "code": ERROR_CODE_BAD_REQUEST
+                            }
+                        )
 
-        except Exception as e:
-            print(e)
+                    order_id = request.query_params.get("orderId")
 
-            return response_fun(
-                RESPONSE_INVALID,
-                {
-                    "message": str(e),
-                    "code": ERROR_CODE_BAD_REQUEST
-                }
-            )
+                    if not order_id:
+                        return response_fun(
+                            RESPONSE_INVALID,
+                            {
+                                "message": "orderId is required.",
+                                "code": ERROR_CODE_BAD_REQUEST
+                            }
+                        )
+
+                    order = OneTimeOrderModel.objects.filter(id=order_id).first()
+
+                    if not order:
+                        return response_fun(
+                            RESPONSE_INVALID,
+                            {
+                                "message": "One time Order not found.",
+                                "code": ERROR_CODE_NOT_FOUND
+                            }
+                        )
+
+                    serializer = UpdateOrderStatusSerializer(data=request.data)
+
+                    if not serializer.is_valid():
+                        return response_fun(
+                            RESPONSE_INVALID,
+                            {
+                                "errors": serializer.errors,
+                                "code": ERROR_CODE_BAD_REQUEST
+                            }
+                        )
+
+                    order.status = serializer.validated_data["status"]
+                    order.save(update_fields=["status"])
+
+                    return response_fun(
+                        RESPONSE_SUCCESS,
+                        {
+                            "message": "One time Order status updated successfully."
+                        }
+                    )
+
+                except Exception as e:
+                    return response_fun(
+                        RESPONSE_INVALID,
+                        {
+                            "message": str(e),
+                            "code": ERROR_CODE_NOT_FOUND
+                        }
+                    )
+          

@@ -12,7 +12,7 @@ from dc.utils import authenticate_and_get_user
 from dc.errors import *
 from dc.parameters import *
 from .service import SubscriptionService
-  
+from django.utils import timezone
 
 class SubscriptionViewSet(viewsets.ViewSet):
         @swagger_auto_schema(
@@ -62,6 +62,21 @@ class SubscriptionViewSet(viewsets.ViewSet):
                     isApplyOffer = data["isApplyOffer"]
                     address_id = data["addressId"]
 
+                    subscription_exists = SubscriptionModel.objects.filter(
+                        product_id=product.id
+                    ).exists()
+
+                    if subscription_exists:
+                        return response_fun(
+                            RESPONSE_INVALID,
+                            {
+                                "message": "User has already subscription",
+                                "code": ERROR_CODE_NOT_FOUND
+                            }
+                        )
+
+
+                     
                     address = UserAddress.objects.filter(
                             id=address_id,
                             user=user
@@ -84,21 +99,85 @@ class SubscriptionViewSet(viewsets.ViewSet):
                         start_date=data["start_date"],
                         quantity=data["quantity"],
                         isApplyOffer=isApplyOffer,
-                        
                     )
 
                     return response_fun(RESPONSE_SUCCESS,{
                             "message": "Subscription created successfully",
                             "data": {
-                                "id": subscription.id,
-                                "userId": subscription.user.id,
-                                "subOwnerId": subscription.subOwner.id,
-                                "productId": subscription.product.id,
-                                "pricingId": subscription.pricing_options.id,
-                                "start_date": subscription.start_date,
-                                "end_date": subscription.end_date,
-                                "status": subscription.status,
-                                "quantity": subscription.quantity,
+                                "orderNumber": subscription.sub_number
+                           }
+                        }
+                    )
+                    
+                except Exception as e:
+                    print('error ', e)
+                    return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !! , ','code': ERROR_CODE_NOT_FOUND}) 
+                
+        @swagger_auto_schema(
+            tags=["Subscription"],
+            operation_description="Genrate Subscription order when payment done",
+            responses={200: SubscriptionCreateSerializer, 404: 'Not found'},
+            manual_parameters=[TOKEN, SUBSCRIPTION_D]
+        )
+        @action(detail=False, methods=['get'])
+        def subscription_approve_payment(self, request):
+                try:
+                    print('request ', request)
+                    user, error = authenticate_and_get_user(request)
+                    print('request user ', user)
+                    print('request error ', error)
+
+                    if error:
+                       return error
+                    
+                    # ONLY CUSTOMER ALLOWED
+                    if user.userType != UserModel.SUB_OWNER:
+                        return response_fun(
+                            RESPONSE_INVALID,
+                            {
+                                "message": "Only admin can approve subscription payment.",
+                                "code": ERROR_CODE_NOT_FOUND
+                            }
+                        )
+                    
+                    subscriptionId = request.GET.get("subscriptionId")
+
+                    order_exists = OrderModel.objects.filter(
+                        subscription_id=subscriptionId
+                    ).exists()
+
+                    if order_exists:
+                        return response_fun(
+                            RESPONSE_INVALID,
+                            {
+                                "message": "Order already created for this subscription",
+                                "code": ERROR_CODE_NOT_FOUND
+                            }
+                        )
+
+                    subscription = SubscriptionModel.objects.get(
+                        id = subscriptionId
+                    )
+
+                    if subscription.status == SubscriptionModel.ACTIVE:
+                         return response_fun(
+                            RESPONSE_INVALID,
+                            {
+                                "message": "Subscription already active",
+                                "code": ERROR_CODE_NOT_FOUND
+                            }
+                        )
+                    
+                    SubscriptionService.generate_orders(
+                        user = subscription.user,
+                        subscription = subscription
+                     )
+
+                    return response_fun(RESPONSE_SUCCESS,{
+                            "message": "Payment approved successfully",
+                            "data": {
+                                 "orderNumber": subscription.sub_number,
+                    
                             }
                         }
                     )
@@ -107,6 +186,7 @@ class SubscriptionViewSet(viewsets.ViewSet):
                     print('error ', e)
                     return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
                 
+
 
         @swagger_auto_schema(
                   tags=["Subscription"],
@@ -127,10 +207,8 @@ class SubscriptionViewSet(viewsets.ViewSet):
                     return error
                  
                 qs = SubscriptionModel.objects.filter(
-                    user=user,
-                    status = SubscriptionModel.ACTIVE
-                    
-                ).order_by("-id")
+                    user=user
+                    ).order_by("-id")
 
                 serializer = SubscriptionListSerializer(qs, many=True)
                 return response_fun(RESPONSE_SUCCESS, 
@@ -144,44 +222,6 @@ class SubscriptionViewSet(viewsets.ViewSet):
                  return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
                 
 
-            
-        @swagger_auto_schema(
-                  tags=["Subscription"],
-                  operation_description="Get subscription detail by id",
-                  responses={200: SubscriptionListSerializer, 404: 'Not found'},
-                  manual_parameters=[TOKEN, SUBSCRIPTION_D]
-        )
-        @action(detail=False, methods=["get"])
-        def subscriptions_detail(self, request):
-
-            try:
-                print('request ', request)
-                user, error = authenticate_and_get_user(request)
-                print('request customer ', user)
-                print('request error ', error)
-
-                if error:
-                    return error
-                
-                subscriptionId = request.GET.get("subscriptionId")
-                 
-                qs = SubscriptionModel.objects.filter(
-                    user=user,
-                    subscription_id=subscriptionId
-                )
-
-                serializer = SubscriptionListSerializer(qs)
-                return response_fun(RESPONSE_SUCCESS,  {
-                                                    'message':"Get my subscription detail",
-                                                    'data': serializer.data
-                                                })
-
-            except Exception as e:
-                 return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
-                
-
-            
-            
         @swagger_auto_schema(
                   tags=["Subscription"],
                   operation_description="Pause subscription",

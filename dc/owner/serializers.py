@@ -2,6 +2,7 @@ from users.models import UserModel
 from rest_framework import serializers
  
 from users.models import UserAddress
+from order.models import OrderModel
 
 class CreateSubOwnerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -14,7 +15,7 @@ class CreateSubOwnerSerializer(serializers.ModelSerializer):
             'deviceId',
             "password", 
             "phoneNumber",
-            'salt', 
+            'salt',
             'userType'
         ]
         extra_kwargs = {
@@ -36,8 +37,17 @@ class LoginSubOwnerSerializer(serializers.Serializer):
 
 class SubOwnerAddressSerializer(serializers.ModelSerializer):
 
-    latitude = serializers.FloatField()
-    longitude = serializers.FloatField()
+    latitude = serializers.DecimalField(
+        max_digits=10,
+        decimal_places =6,
+        coerce_to_string=False
+    )
+
+    longitude = serializers.DecimalField(
+        max_digits=10,
+        decimal_places =6,
+        coerce_to_string=False
+    )
     pincode = serializers.IntegerField()
 
 
@@ -110,3 +120,25 @@ class SubOwnerSerializer(serializers.ModelSerializer):
             return UserAddressSerializer(default_address).data
 
         return None
+    
+
+class UpdateOrderStatusSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(
+        choices=OrderModel.STATUS_CHOICES
+    )
+
+class UserListSerializer(serializers.ModelSerializer):
+    subscription_order_count = serializers.IntegerField(read_only=True)
+    one_time_order_count = serializers.IntegerField(read_only=True)
+    total_order_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = UserModel
+        fields = (
+            "id",
+            "name",
+            "phoneNumber",
+            "subscription_order_count",
+            "one_time_order_count",
+            "total_order_count",
+        )

@@ -87,7 +87,6 @@ INSTALLED_APPS = [
     'product',
     'subscription',
     'order',
-    'delivery',
     'dashboard',
     'support',
     'reviews',
@@ -218,7 +217,7 @@ CELERY_TIMEZONE = 'UTC'
 
 SWAGGER_SETTINGS = {
     "USE_SESSION_AUTH": False,
-    "DEFAULT_API_URL": "https://7e4e-182-77-58-183.ngrok-free.app",
+    "DEFAULT_API_URL": "https://b194-182-77-58-183.ngrok-free.app",
 
     'SECURITY_DEFINITIONS': {
         'token': {

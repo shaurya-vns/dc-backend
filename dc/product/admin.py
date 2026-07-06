@@ -5,6 +5,9 @@ class ProductPricingInline(admin.TabularInline):
     model = ProductPricingModel
     extra = 1
 
+    fields = ("id", "days", "price", "is_best_offer")
+    readonly_fields = ("id",)
+
 
 @admin.register(ProductModel)
 class ProductAdmin(admin.ModelAdmin):
@@ -25,27 +28,16 @@ class ProductAdmin(admin.ModelAdmin):
     inlines = [ProductPricingInline]
 
 
- 
-
 @admin.register(ProductPricingModel)
 class ProductPricingAdmin(admin.ModelAdmin):
-
     list_display = (
-        "id",
+        "pk",
         "product",
         "days",
         "price",
         "is_best_offer",
     )
-
-    list_filter = (
-        "days",
-        "is_best_offer",
-    )
-
-    search_fields = (
-        "product__name",
-    )
+ 
 
 @admin.register(MealTypeModel)
 class MealTypeAdmin(admin.ModelAdmin):
