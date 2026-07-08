@@ -34,16 +34,19 @@ class SubscriptionService:
         
         offer = None
         discount = 0
+        print('isApplyOffer ', isApplyOffer)
         if isApplyOffer:
-            offer = product.offer  # ONE OFFER PER PRODUCT
-            if offer:
-                now = timezone.now()
-                if (offer.is_active and offer.start_date <= now <= offer.end_date):
-                    discount = offer.discount_amount
+            offer = product.offer  
+            print('offer ', offer)
+
+            discount = offer.discount_amount
+                    
+
+        print('discount ', discount)
 
                  
         final_amount = max(original_price - discount, 0)
-        end_date = start_date + timedelta(days=total_days)
+        end_date = start_date + timedelta(days=total_days -1 )
 
         subscription = SubscriptionModel.objects.create(
             user=user,

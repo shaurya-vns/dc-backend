@@ -12,14 +12,12 @@ from dc.utils import authenticate_and_get_user
 from dc.errors import *
 from dc.parameters import *
 from django.utils import timezone
-from datetime import timedelta
-from decimal import Decimal
 from django.db import transaction
 from owner.serializers import UpdateOrderStatusSerializer
-  
 from onetimeorder.serializers import OneTimeOrderCreateSerializer
 from onetimeorder.serializers import OneTimeOrderDetailSerializer
-
+from dc.constant import *
+from address.models import AddressModel 
 
 class OneTimeOrderViewSet(viewsets.ViewSet):
 
@@ -76,7 +74,7 @@ class OneTimeOrderViewSet(viewsets.ViewSet):
                 )
 
             # Address validation
-            address = UserAddress.objects.filter(
+            address = AddressModel.objects.filter(
                 id=data["addressId"],
                 user=user
             ).first()
@@ -105,7 +103,7 @@ class OneTimeOrderViewSet(viewsets.ViewSet):
                 final_amount=final_amount,
                 delivery_date=delivery_date,
                 meal_type=product.plan_type,
-                status=OneTimeOrderModel.PENDING,
+                status= PENDING,
             )
 
             return response_fun(
@@ -159,7 +157,7 @@ class OneTimeOrderViewSet(viewsets.ViewSet):
 
                     filters = {
                         "user_id": user_id,
-                        "status": OneTimeOrderModel.PENDING,
+                        "status": PENDING,
                     }
 
                     # ✅ OPTIONAL DATE FILTER
@@ -227,15 +225,6 @@ class OneTimeOrderViewSet(viewsets.ViewSet):
                         )
 
                     order_id = request.query_params.get("orderId")
-
-                    if not order_id:
-                        return response_fun(
-                            RESPONSE_INVALID,
-                            {
-                                "message": "orderId is required.",
-                                "code": ERROR_CODE_BAD_REQUEST
-                            }
-                        )
 
                     order = OneTimeOrderModel.objects.filter(id=order_id).first()
 

@@ -6,15 +6,14 @@ from .serializers import *
 from dc.utils import response_fun
 from dc.constant import RESPONSE_INVALID, RESPONSE_SUCCESS
 from dc.errors import   ERROR_CODE_NOT_FOUND
-from django.contrib.auth.hashers        import make_password
 from dc.parameters import TOKEN
 from dc.utils import authenticate_and_get_user
 from dc.errors import *
 from dc.parameters import *
-from django.utils import timezone
-from datetime import timedelta
 from order.serializers import OrderListSerializer
 from owner.serializers import UpdateOrderStatusSerializer
+
+from dc.constant import *
   
 
 class OrderViewSet(viewsets.ViewSet):

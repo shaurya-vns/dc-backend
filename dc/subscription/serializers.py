@@ -5,10 +5,11 @@ from rest_framework import serializers
 
 from .models import SubscriptionModel
 from order.models import OrderModel
-
+from datetime import date
 from datetime import timedelta
 from product.serializers import ProductDetailSerializer, ProductPricingSerializer
-from users.serializers import UserAddressSerializer, GetProfileSerializer
+from users.serializers import  GetProfileSerializer
+from address.serializers  import GetAddressSerializer
 
 PLAN_TYPE_MAPPING = {
     "breakfast": ["breakfast"],
@@ -84,6 +85,8 @@ def create_subscription_orders(subscription):
 
 class SubscriptionListSerializer(serializers.ModelSerializer):
 
+    remainingDays = serializers.SerializerMethodField()
+
     product = ProductDetailSerializer(
         read_only=True
     )
@@ -92,7 +95,7 @@ class SubscriptionListSerializer(serializers.ModelSerializer):
         read_only=True
     )
 
-    address = UserAddressSerializer(read_only=True)
+    address = GetAddressSerializer(read_only=True)
 
     pricing_detail = ProductPricingSerializer(
         source="pricing_options",
@@ -134,7 +137,16 @@ class SubscriptionListSerializer(serializers.ModelSerializer):
             "amount",
             'address',
             'sub_number',
-            'user'
+            'user',
+            'remainingDays'
         )
+
+    def get_remainingDays(self, obj):
+        today = date.today()
+
+        if obj.end_date < today:
+            return 0
+
+        return (obj.end_date - today).days 
 
  

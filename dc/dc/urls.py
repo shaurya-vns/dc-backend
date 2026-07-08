@@ -23,6 +23,7 @@ schema_view = get_schema_view(
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/users/',include('users.urls')),
+    path('api/address/',include('address.urls')),
     path('api/sub-owners/',include('owner.urls')),
     path('api/products/',include('product.urls')),
     path('api/subscriptions/',include('subscription.urls')),
@@ -30,6 +31,8 @@ urlpatterns = [
     path('api/dashboard/',include('dashboard.urls')),
     path('api/reviews/',include('reviews.urls')),
     path('api/one-time-orders/',include('onetimeorder.urls')),
+    path('api/support/',include('support.urls')),
+    path('api/ondemand/',include('ondemand.urls')),
 
 
    

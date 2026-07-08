@@ -3,27 +3,14 @@ from dc.base_model import BaseModel
 from product.models import ProductModel, MealTypeModel
 from users.models import UserModel
 from product.models import ProductPricingModel
-from users.models import UserAddress
+from address.models import AddressModel
 from offer.models import OfferModel
 import random
 import string
-
+from dc.constant import *
 
 class OneTimeOrderModel(BaseModel):
 
-    PENDING = 1
-    PREPARING = 2
-    DELIVERED = 3
-    CANCELLED = 4
-    SKIPPED =  5
-
-    STATUS_CHOICES = (
-        (PENDING, "Pending"),
-        (PREPARING, "Preparing"),
-        (DELIVERED, "Delivered"),
-        (CANCELLED, "Cancelled"),
-        (SKIPPED, "Skipped"),
-    )
 
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
 
@@ -39,7 +26,7 @@ class OneTimeOrderModel(BaseModel):
     )
 
     address = models.ForeignKey(
-        UserAddress,
+        AddressModel,
         on_delete=models.PROTECT
     )
 

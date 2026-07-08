@@ -1,8 +1,7 @@
 from users.models import UserModel
 from rest_framework import serializers
- 
-from users.models import UserAddress
-from order.models import OrderModel
+from address.serializers import GetAddressSerializer
+from dc.constant import *
 
 class CreateSubOwnerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -34,69 +33,7 @@ class LoginSubOwnerSerializer(serializers.Serializer):
     class Meta:
         ref_name = None
 
-
-class SubOwnerAddressSerializer(serializers.ModelSerializer):
-
-    latitude = serializers.DecimalField(
-        max_digits=10,
-        decimal_places =6,
-        coerce_to_string=False
-    )
-
-    longitude = serializers.DecimalField(
-        max_digits=10,
-        decimal_places =6,
-        coerce_to_string=False
-    )
-    pincode = serializers.IntegerField()
-
-
-    class Meta:
-        model = UserAddress
-        fields = (
-            "id",
-            "addressType",
-            "houseNo",
-            "landmark",
-            "address",
-            "city",
-            "state",
-            "pincode",
-            "latitude",
-            "longitude",
-            "isDefault",
-        )
-
-    def create(self, validated_data):
-
-        user = self.context["user"]
-
-        if validated_data.get("isDefault", False):
-            UserAddress.objects.filter(
-                user=user
-            ).update(isDefault=False)
-
-        return UserAddress.objects.create(
-            user=user,
-            **validated_data
-        )
-
-    def update(self, instance, validated_data):
-
-        if validated_data.get("isDefault", False):
-            UserAddress.objects.filter(
-                user=instance.user
-            ).exclude(id=instance.id).update(isDefault=False)
-
-        return super().update(instance, validated_data)
-    
-
-class UserAddressSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserAddress
-        fields = "__all__"
-
-    
+  
 class SubOwnerSerializer(serializers.ModelSerializer):
     address = serializers.SerializerMethodField()
 
@@ -117,28 +54,12 @@ class SubOwnerSerializer(serializers.ModelSerializer):
             default_address = obj.addresses.first()
 
         if default_address:
-            return UserAddressSerializer(default_address).data
+            return GetAddressSerializer(default_address).data
 
         return None
     
 
 class UpdateOrderStatusSerializer(serializers.Serializer):
     status = serializers.ChoiceField(
-        choices=OrderModel.STATUS_CHOICES
+        choices= STATUS_CHOICES
     )
-
-class UserListSerializer(serializers.ModelSerializer):
-    subscription_order_count = serializers.IntegerField(read_only=True)
-    one_time_order_count = serializers.IntegerField(read_only=True)
-    total_order_count = serializers.IntegerField(read_only=True)
-
-    class Meta:
-        model = UserModel
-        fields = (
-            "id",
-            "name",
-            "phoneNumber",
-            "subscription_order_count",
-            "one_time_order_count",
-            "total_order_count",
-        )

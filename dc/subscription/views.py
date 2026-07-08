@@ -6,13 +6,13 @@ from .serializers import *
 from dc.utils import response_fun
 from dc.constant import RESPONSE_INVALID, RESPONSE_SUCCESS
 from dc.errors import   ERROR_CODE_NOT_FOUND
-from django.contrib.auth.hashers        import make_password
 from dc.parameters import TOKEN
 from dc.utils import authenticate_and_get_user
 from dc.errors import *
 from dc.parameters import *
 from .service import SubscriptionService
-from django.utils import timezone
+from dc.constant import *
+ 
 
 class SubscriptionViewSet(viewsets.ViewSet):
         @swagger_auto_schema(
@@ -77,7 +77,7 @@ class SubscriptionViewSet(viewsets.ViewSet):
 
 
                      
-                    address = UserAddress.objects.filter(
+                    address = AddressModel.objects.filter(
                             id=address_id,
                             user=user
                         ).first()
@@ -159,7 +159,7 @@ class SubscriptionViewSet(viewsets.ViewSet):
                         id = subscriptionId
                     )
 
-                    if subscription.status == SubscriptionModel.ACTIVE:
+                    if subscription.status == ACTIVE:
                          return response_fun(
                             RESPONSE_INVALID,
                             {
@@ -219,6 +219,7 @@ class SubscriptionViewSet(viewsets.ViewSet):
                                             )
 
             except Exception as e:
+                 print('eeeee ',e)
                  return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
                 
 
@@ -353,6 +354,47 @@ class SubscriptionViewSet(viewsets.ViewSet):
             
             except Exception as e:
                  return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
+            
+
+
+        @swagger_auto_schema(
+                  tags=["SubOwner"],
+                  operation_description="Subscrioption list by user ID",
+                  responses={200: SubscriptionListSerializer, 404: 'Not found'},
+                  manual_parameters=[TOKEN, USER_ID]
+        )
+        @action(detail=False, methods=["get"])
+        def subscriptions_list_by_user_id(self, request):
+
+                try:
+        
+                    user, error = authenticate_and_get_user(request)
+                    
+                    if error:
+                        return error
+                    
+                    user_id = request.query_params.get("userId")
+            
+                    filters = {}
+
+                    if user_id:
+                            filters["user_id"] = user_id
+
+                    subscriptions = SubscriptionModel.objects.filter(
+                        **filters
+                    ).order_by("-id")
+                    
+                    serializer = SubscriptionListSerializer(subscriptions, many=True)
+                    return response_fun(RESPONSE_SUCCESS, 
+                                                    {
+                                                        'message':"Subscrioption list",
+                                                        'data': serializer.data
+                                                    }
+                                                )
+
+                except Exception as e:
+                    return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
+                    
                 
 
             

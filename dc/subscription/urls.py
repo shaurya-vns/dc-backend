@@ -12,6 +12,6 @@ urlpatterns = [
     path("pause", SubscriptionViewSet.as_view({"get": "subscriptions_pause"})),
     path("resume", SubscriptionViewSet.as_view({"get": "subscriptions_cancelled"})),
     path("cancel", SubscriptionViewSet.as_view({"get": "subscriptions_resume"})),
+    path("list/", SubscriptionViewSet.as_view({"get": "subscriptions_list_by_user_id"})),
 
-    
 ]

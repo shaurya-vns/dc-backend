@@ -1,6 +1,6 @@
 from .models import UserModel
 from rest_framework import serializers
-from users.models import UserAddress
+from owner.serializers import SubOwnerSerializer
  
 class CreateUserSerializer(serializers.ModelSerializer):
     subOwnerId = serializers.IntegerField(write_only=True)
@@ -73,52 +73,6 @@ class ChangeSubscriptionSerializer(serializers.Serializer):
     startDate = serializers.DateField()
 
 
-
-class UserAddressSerializer(serializers.ModelSerializer):
-
-    pincode = serializers.IntegerField()
-
-    class Meta:
-        model = UserAddress
-        fields = (
-            "id",
-            "addressType",
-            "houseNo",
-            "landmark",
-            "address",
-            "city",
-            "state",
-            "pincode",
-            "latitude",
-            "longitude",
-            "isDefault",
-            'phoneNumber'
-        )
-
-    def create(self, validated_data):
-
-        user = self.context["user"]
-
-        if validated_data.get("isDefault", False):
-            UserAddress.objects.filter(
-                user=user
-            ).update(isDefault=False)
-
-        return UserAddress.objects.create(
-            user=user,
-            **validated_data
-        )
-
-    def update(self, instance, validated_data):
-
-        if validated_data.get("isDefault", False):
-            UserAddress.objects.filter(
-                user=instance.user
-            ).exclude(id=instance.id).update(isDefault=False)
-
-        return super().update(instance, validated_data)
-    
-
 class UpdateProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -132,14 +86,20 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
 
 class GetProfileSerializer(serializers.ModelSerializer):
 
+    parent = SubOwnerSerializer(read_only=True)
+
     class Meta:
         model = UserModel
-        fields = [
-            'id',
+        fields = (
+            "id",
             "name",
-            "profileImage",
-            'phoneNumber'
-        ]
+            "phoneNumber",
+            "platform",
+            "deviceToken",
+            "deviceId",
+            "parent",
+            'userType'
+        )
 
 class UserListSerializer(serializers.ModelSerializer):
     subscription_order_count = serializers.IntegerField(read_only=True)

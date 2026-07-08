@@ -3,49 +3,74 @@ from datetime import timedelta
 
 from rest_framework import serializers
 
-from .models import SupportRequestModel
- 
-class CreateSupportRequestSerializer(serializers.Serializer):
+from .models import SupportMessageModel, SupportTicketModel
 
-    orderId = serializers.IntegerField()
 
-    request_type = serializers.ChoiceField(
-        choices=[
-            "feedback",
-            "complaint",
-            "food_quality",
-            "delivery_issue",
-            "refund",
-            "other"
-        ]
-    )
+class SupportMessageSerializer(serializers.ModelSerializer):
 
-    subject = serializers.CharField()
-    message = serializers.CharField()
-
-class SupportRequestListSerializer(serializers.ModelSerializer):
-
-    customer_name = serializers.CharField(
-        source="customer.name",
+    sender_name = serializers.CharField(
+        source="sender.name",
         read_only=True
     )
 
     class Meta:
-        model = SupportRequestModel
-        fields = "__all__"
+        model = SupportMessageModel
+        fields = (
+            "id",
+            "sender",
+            "sender_name",
+            "message",
+            "image",
+            "created_at",
+        )
+        read_only_fields = (
+            "sender",
+            "created_at",
+        )
 
+class SupportTicketSerializer(serializers.ModelSerializer):
 
-class UpdateSupportRequestSerializer(serializers.Serializer):
+    last_message = serializers.SerializerMethodField()
 
-    requestId = serializers.IntegerField()
+    class Meta:
+        model = SupportTicketModel
+        fields = (
+            "id",
+            "subject",
+            "issue_type",
+            "status",
+            "subscription_order",
+            "one_time_order",
+            "created_at",
+            "last_message",
+        )
 
-    status = serializers.ChoiceField(
-        choices=[
-            "open",
-            "in_progress",
-            "resolved",
-            "closed"
-        ]
+    def get_last_message(self, obj):
+
+        msg = obj.messages.order_by("-created_at").first()
+
+        if msg:
+            return msg.message
+
+        return ""
+    
+
+class SupportTicketDetailSerializer(serializers.ModelSerializer):
+
+    messages = SupportMessageSerializer(
+        many=True,
+        read_only=True
     )
 
-    admin_remark = serializers.CharField()
+    class Meta:
+        model = SupportTicketModel
+        fields = (
+            "id",
+            "subject",
+            "issue_type",
+            "status",
+            "subscription_order",
+            "one_time_order",
+            "messages",
+            "created_at",
+        )

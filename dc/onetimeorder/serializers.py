@@ -1,9 +1,7 @@
 from rest_framework import serializers
-from product.models import ProductModel, ProductPricingModel
-from users.models import UserAddress
 from onetimeorder.models import OneTimeOrderModel
 from product.serializers import ProductDetailSerializer
-from users.serializers import UserAddressSerializer
+from address.serializers import GetAddressSerializer
 from offer.serializers import OfferSerializer
 from owner.serializers import SubOwnerSerializer
 from users.serializers import GetProfileSerializer
@@ -52,7 +50,7 @@ from rest_framework import serializers
 class OneTimeOrderDetailSerializer(serializers.ModelSerializer):
     product = ProductDetailSerializer(read_only=True)
     offer = OfferSerializer(read_only=True)
-    address = UserAddressSerializer(read_only=True)
+    address = GetAddressSerializer(read_only=True)
     user = GetProfileSerializer(read_only=True)
     subOwner = SubOwnerSerializer(read_only=True)
 

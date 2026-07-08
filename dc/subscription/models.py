@@ -1,44 +1,19 @@
 from django.db import models
 from dc.base_model import BaseModel
-from users.models import UserModel, UserAddress
+from users.models import UserModel
+from address.models import AddressModel
 from product.models import ProductModel, ProductPricingModel
 import random
 import string
+
+from dc.constant import *
 
 # Create your models here.
 
 class SubscriptionModel(BaseModel):
 
-    PENDING = 1
-    ACTIVE = 2
-    PAUSED = 3
-    COMPLETED = 4
-    CANCELLED = 5
-    TRANSFERRED = 6
- 
-    STATUS_CHOICES = (
-        (PENDING, "Pending"),
-        (ACTIVE, "Active"),
-        (PAUSED, "Paused"),
-        (COMPLETED, "Completed"),
-        (CANCELLED, "Cancelled"),
-        (TRANSFERRED, "Transferred"),
-    )
-
-    PAYMENT_PENDING = 1
-    PAYMENT_RECEIVED = 2
-    PAYMENT_FAILED = 3
-    PAYMENT_REFUNDED = 4
-
-    PAYMENT_STATUS_CHOICES = (
-        (PAYMENT_PENDING, "Pending"),
-        (PAYMENT_RECEIVED, "Received"),
-        (PAYMENT_FAILED, "Failed"),
-        (PAYMENT_REFUNDED, "Refunded"),
-    )
-
     payment_status = models.PositiveSmallIntegerField(
-        choices=PAYMENT_STATUS_CHOICES,
+        choices=STATUS_CHOICES,
         default=PAYMENT_PENDING,
     )
 
@@ -53,7 +28,7 @@ class SubscriptionModel(BaseModel):
     )
 
     address = models.ForeignKey(
-        UserAddress,
+        AddressModel,
         on_delete=models.PROTECT,
         null=True,
         blank=True

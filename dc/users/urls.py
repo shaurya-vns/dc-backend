@@ -8,12 +8,7 @@ router = DefaultRouter()
 urlpatterns = [
     path('register', UserViewSet.as_view({'post': 'register_user'})),
     path('login', UserViewSet.as_view({'post': 'login_user'})),
-    path('change-subowner', UserViewSet.as_view({'post': 'change_subowner'})),
-    path('address_add', UserViewSet.as_view({'post': 'address_add'})), 
-    path('address_list', UserViewSet.as_view({'get': 'address_list'})), 
-    path('address_update', UserViewSet.as_view({'put': 'address_update'})), 
-    path('address_delete', UserViewSet.as_view({'delete': 'address_delete'})), 
-    path('address_default', UserViewSet.as_view({'get': 'address_default'})), 
+    path('change-subowner', UserViewSet.as_view({'post': 'change_subowner'})), 
     path('profile', UserViewSet.as_view({'get': 'get_profile'})), 
     path('update', UserViewSet.as_view({'put': 'update_profile'})), 
     path('all', UserViewSet.as_view({'get': 'get_all_profile'})),     

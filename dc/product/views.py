@@ -21,6 +21,7 @@ from django.db.models import Exists, OuterRef
 from django.db.models import Avg, DecimalField, FloatField
 from subscription.models import SubscriptionModel
 from django.db.models.functions import Coalesce
+from dc.constant import *
 
 from .models import ProductModel
 from .serializers import (
@@ -129,7 +130,7 @@ class ProductViewSet(viewsets.ViewSet):
                         isSubscribed=Exists(
                             SubscriptionModel.objects.filter(
                                 user=user,
-                                status=SubscriptionModel.ACTIVE,
+                                status= ACTIVE,
                                 product=OuterRef("pk")
                             )
                         )
@@ -183,7 +184,7 @@ class ProductViewSet(viewsets.ViewSet):
                         isSubscribed=Exists(
                             SubscriptionModel.objects.filter(
                                 user=user,
-                                status=SubscriptionModel.ACTIVE,
+                                status = ACTIVE,
                                 product=OuterRef("pk")
                             )
                         )

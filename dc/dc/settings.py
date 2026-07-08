@@ -83,6 +83,7 @@ INSTALLED_APPS = [
     'drf_yasg',  # Add drf_yasg here
      # Custom apps
     'users',
+    'address',
     'owner',
     'product',
     'subscription',
@@ -91,7 +92,8 @@ INSTALLED_APPS = [
     'support',
     'reviews',
     'offer',
-    'onetimeorder'
+    'onetimeorder',
+    'ondemand'
 
 ]
 

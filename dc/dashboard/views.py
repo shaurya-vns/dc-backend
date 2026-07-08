@@ -15,8 +15,6 @@ from datetime import timedelta
 from order.models import OrderModel
 from subscription.models import SubscriptionModel
 from order.serializers import OrderListSerializer
-from support.serializers import UpdateSupportRequestSerializer
-from support.models import SupportRequestModel
 from users.models import UserModel
 from users.serializers import SubOwnerListSerializer, LogInSerializer, CreateUserSerializer
 from dc.constant import RESPONSE_INVALID, RESPONSE_SUCCESS, RESPONSE_ERROR

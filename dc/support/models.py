@@ -3,49 +3,68 @@ from dc.base_model import BaseModel
 
 from users.models import UserModel
 from order.models import OrderModel
-from subscription.models import SubscriptionModel
+from onetimeorder.models import OneTimeOrderModel
+
+from dc.constant import *
 
 
-class SupportRequestModel(BaseModel):
+class SupportTicketModel(BaseModel):
 
-    REQUEST_TYPES = (
-        ("feedback", "Feedback"),
-        ("complaint", "Complaint"),
-        ("food_quality", "Food Quality"),
-        ("delivery_issue", "Delivery Issue"),
-        ("refund", "Refund"),
-        ("other", "Other"),
+
+    user = models.ForeignKey(
+        UserModel,
+        on_delete=models.CASCADE,
+        related_name="support_tickets"
     )
 
-    STATUS_CHOICES = (
-        ("open", "Open"),
-        ("in_progress", "In Progress"),
-        ("resolved", "Resolved"),
-        ("closed", "Closed"),
+    subOwner = models.ForeignKey(
+        UserModel,
+        on_delete=models.CASCADE,
+        related_name="received_tickets"
     )
 
-    customer = models.ForeignKey(
+    subscription_order = models.ForeignKey(
+        OrderModel,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
+    )
+
+    one_time_order = models.ForeignKey(
+        OneTimeOrderModel,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
+    )
+
+    subject = models.CharField(max_length=150)
+
+    issue_type = models.CharField(max_length=50)
+
+    status = models.PositiveSmallIntegerField(
+        choices=STATUS_CHOICES,
+        default=OPEN
+    )
+
+class SupportMessageModel(BaseModel):
+
+    ticket = models.ForeignKey(
+        SupportTicketModel,
+        related_name="messages",
+        on_delete=models.CASCADE
+    )
+
+    sender = models.ForeignKey(
         UserModel,
         on_delete=models.CASCADE
     )
 
-    request_type = models.CharField(
-        max_length=50,
-        choices=REQUEST_TYPES
-    )
+    message = models.TextField()
 
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default="open"
-    )
-
-    admin_remark = models.TextField(
+    image = models.ImageField(
+        upload_to="support/",
         blank=True,
         null=True
     )
 
-    message = models.TextField()
-
-    def __str__(self):
-        return f"{self.id} - {self.subject}"
+    is_read = models.BooleanField(default=False)

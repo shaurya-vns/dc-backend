@@ -1,10 +1,6 @@
 from rest_framework import serializers
-from .models import ProductModel, OrderModel
-from product.serializers import ProductDetailSerializer
-from users.serializers import CreateUserSerializer
-from owner.serializers import SubOwnerSerializer
+from .models import  OrderModel
 from subscription.serializers import SubscriptionListSerializer
-from users.serializers import UpdateProfileSerializer
 
 class OrderListSerializer(serializers.ModelSerializer):
 
