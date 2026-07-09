@@ -66,7 +66,7 @@ class OnDemandViewSet(viewsets.ViewSet):
             
         @swagger_auto_schema(
             tags=["On Demand"],
-            manual_parameters=[TOKEN]
+            manual_parameters=[TOKEN, USER_ID]
         )
         @action(detail=False, methods=["get"])
         def on_demand_list(self, request):
@@ -78,20 +78,15 @@ class OnDemandViewSet(viewsets.ViewSet):
                 if error:
                     return error
                 
-                if user.userType == UserModel.SUB_OWNER:
-                     orders = OnDemandModel.objects.filter(
-                            subOwner=user
-                        ).select_related(
-                            "address",
-                            "subOwner"
-                        ).order_by("-created_at")
-                else:
-                     orders = OnDemandModel.objects.filter(
-                        user=user
+                user_id = request.query_params.get("userId")
+                
+                orders = OnDemandModel.objects.filter(
+                        user_id= user_id
                     ).select_related(
                         "address",
                         "subOwner"
                     ).order_by("-created_at")
+                     
 
                 serializer = OnDemandSerializer(
                     orders,

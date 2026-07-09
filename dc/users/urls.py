@@ -11,5 +11,6 @@ urlpatterns = [
     path('change-subowner', UserViewSet.as_view({'post': 'change_subowner'})), 
     path('profile', UserViewSet.as_view({'get': 'get_profile'})), 
     path('update', UserViewSet.as_view({'put': 'update_profile'})), 
-    path('all', UserViewSet.as_view({'get': 'get_all_profile'})),     
+    path('all', UserViewSet.as_view({'get': 'get_all_profile'})),   
+    path('get_profile_by_id', UserViewSet.as_view({'get': 'get_profile_by_id'})),      
 ]

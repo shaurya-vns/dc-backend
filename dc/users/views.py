@@ -267,6 +267,47 @@ class UserViewSet(viewsets.ViewSet):
 
     @swagger_auto_schema(
         tags=["Users"],
+        manual_parameters=[TOKEN, USER_ID]
+    )
+    @action(detail=False, methods=["get"])
+    def get_profile_by_id(self, request):
+        try:
+            user, error = authenticate_and_get_user(request)
+
+            if error:
+                return error
+            print('ssss s', user)
+
+            userId = request.query_params.get("userId")
+
+            print('WWWWW userId ', userId)
+
+            customer = UserModel.objects.get(
+                id = userId
+            )
+
+            serializer = ProfileAddressSerializer(customer)
+            return response_fun(
+                RESPONSE_SUCCESS,
+                {
+                    "message": "Profile fetched successfully.",
+                    "data": serializer.data
+                }
+            )
+
+        except Exception as e:
+            print('ddddsd   ', e)
+            return response_fun(
+                RESPONSE_INVALID,
+                {
+                    "message": str(e),  
+                    "code": ERROR_CODE_NOT_FOUND
+                }
+            )
+            
+
+    @swagger_auto_schema(
+        tags=["Users"],
         request_body=UpdateProfileSerializer,
         manual_parameters=[TOKEN]
     )

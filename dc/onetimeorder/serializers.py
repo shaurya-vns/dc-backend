@@ -5,7 +5,7 @@ from address.serializers import GetAddressSerializer
 from offer.serializers import OfferSerializer
 from owner.serializers import SubOwnerSerializer
 from users.serializers import GetProfileSerializer
-
+from django.utils import timezone
 
 
 class OneTimeOrderCreateSerializer(serializers.ModelSerializer):
@@ -54,6 +54,8 @@ class OneTimeOrderDetailSerializer(serializers.ModelSerializer):
     user = GetProfileSerializer(read_only=True)
     subOwner = SubOwnerSerializer(read_only=True)
 
+    isToday = serializers.SerializerMethodField()
+
     amount = serializers.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -81,5 +83,9 @@ class OneTimeOrderDetailSerializer(serializers.ModelSerializer):
             "address",
             "meal_type",
             "delivery_date",
-            'order_number'
+            'order_number',
+             "isToday",
         )
+
+    def get_isToday(self, obj):
+        return obj.delivery_date == timezone.localdate()

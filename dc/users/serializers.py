@@ -1,6 +1,7 @@
 from .models import UserModel
 from rest_framework import serializers
 from owner.serializers import SubOwnerSerializer
+from address.serializers import GetAddressSerializer
  
 class CreateUserSerializer(serializers.ModelSerializer):
     subOwnerId = serializers.IntegerField(write_only=True)
@@ -87,6 +88,7 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
 class GetProfileSerializer(serializers.ModelSerializer):
 
     parent = SubOwnerSerializer(read_only=True)
+    address = GetAddressSerializer(read_only=True)
 
     class Meta:
         model = UserModel
@@ -98,7 +100,8 @@ class GetProfileSerializer(serializers.ModelSerializer):
             "deviceToken",
             "deviceId",
             "parent",
-            'userType'
+            'userType',
+            'address'
         )
 
 class UserListSerializer(serializers.ModelSerializer):
@@ -115,4 +118,22 @@ class UserListSerializer(serializers.ModelSerializer):
             "subscription_order_count",
             "one_time_order_count",
             "total_order_count",
+        )
+
+
+
+
+class ProfileAddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserModel
+        fields = (
+            "id",
+            "name",
+            "phoneNumber",
+            "platform",
+            "deviceToken",
+            "deviceId",
+            "parent",
+            'userType',
+        
         )

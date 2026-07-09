@@ -55,7 +55,7 @@ class OrderViewSet(viewsets.ViewSet):
 
                 orders = OrderModel.objects.filter(
                      **filters
-                ).order_by("delivery_date")
+                ).order_by("-delivery_date")
 
                 print('request orders ', orders)
 

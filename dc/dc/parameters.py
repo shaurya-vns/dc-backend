@@ -55,8 +55,8 @@ DELIVERY_DATE = openapi.Parameter(
     openapi.IN_QUERY,
     description="Filter by delivery date (YYYY-MM-DD). If not provided, returns today's orders.",
     type=openapi.TYPE_STRING,
-    required=False
+    required=True
 )
+ 
 
-
-USER_ID = openapi.Parameter('userId', openapi.IN_QUERY, description="User ID", type=openapi.TYPE_INTEGER)
+USER_ID = openapi.Parameter('userId', openapi.IN_QUERY, description="User ID", type=openapi.TYPE_INTEGER,  required=True)

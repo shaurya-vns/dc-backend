@@ -63,7 +63,8 @@ class SubscriptionViewSet(viewsets.ViewSet):
                     address_id = data["addressId"]
 
                     subscription_exists = SubscriptionModel.objects.filter(
-                        product_id=product.id
+                        product_id=product.id,
+                        user = user
                     ).exists()
 
                     if subscription_exists:
@@ -185,42 +186,6 @@ class SubscriptionViewSet(viewsets.ViewSet):
                 except Exception as e:
                     print('error ', e)
                     return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
-                
-
-
-        @swagger_auto_schema(
-                  tags=["Subscription"],
-                  operation_description="Get next day order",
-                  responses={200: SubscriptionListSerializer, 404: 'Not found'},
-                  manual_parameters=[TOKEN]
-        )
-        @action(detail=False, methods=["get"])
-        def my_subscriptions(self, request):
-
-            try:
-                print('request ', request)
-                user, error = authenticate_and_get_user(request)
-                print('request user ', user)
-                print('request error ', error)
-
-                if error:
-                    return error
-                 
-                qs = SubscriptionModel.objects.filter(
-                    user=user
-                    ).order_by("-id")
-
-                serializer = SubscriptionListSerializer(qs, many=True)
-                return response_fun(RESPONSE_SUCCESS, 
-                                                {
-                                                    'message':"Get my subscription list",
-                                                    'data': serializer.data
-                                                }
-                                            )
-
-            except Exception as e:
-                 print('eeeee ',e)
-                 return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
                 
 
         @swagger_auto_schema(

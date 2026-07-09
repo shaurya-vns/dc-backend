@@ -4,6 +4,7 @@ from django.db import transaction
 from .models import SubscriptionModel
 from order.models import OrderModel
 from django.utils import timezone
+from dc.constant import *
 
 
 PLAN_TYPE_MAPPING = {
@@ -58,7 +59,7 @@ class SubscriptionService:
             original_price = original_price,
             discount_amount = discount,
             quantity=quantity,
-            status=SubscriptionModel.PENDING,
+            status= PENDING,
             address= address
         )
 
@@ -69,8 +70,8 @@ class SubscriptionService:
 
         start_date = timezone.now().date()
 
-        subscription.payment_status = SubscriptionModel.PAYMENT_RECEIVED
-        subscription.status = SubscriptionModel.ACTIVE
+        subscription.payment_status = PAYMENT_RECEIVED
+        subscription.status = ACTIVE
 
         subscription.start_date = start_date
         subscription.end_date = start_date + timedelta(days=subscription.pricing_options.days)

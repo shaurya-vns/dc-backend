@@ -90,6 +90,8 @@ class OneTimeOrderViewSet(viewsets.ViewSet):
 
             quantity = data["quantity"]
             delivery_date = data["delivery_date"]
+
+            print('delivery_date ', delivery_date)
     
             final_amount =  product.product_price * quantity
 
@@ -157,16 +159,12 @@ class OneTimeOrderViewSet(viewsets.ViewSet):
 
                     filters = {
                         "user_id": user_id,
-                        "status": PENDING,
                     }
 
-                    # ✅ OPTIONAL DATE FILTER
+            
                     if delivery_date:
                         filters["delivery_date"] = delivery_date
-                    else:
-                        # default = today
-                        filters["delivery_date"] = timezone.localdate()
-
+                   
                     
                     orders = OneTimeOrderModel.objects.filter(
                             **filters
@@ -174,7 +172,7 @@ class OneTimeOrderViewSet(viewsets.ViewSet):
                             "product",
                             "offer",
                             "address"
-                        ).order_by("-delivery_date")
+                        ).order_by("delivery_date")
 
 
                     serializer = OneTimeOrderDetailSerializer(
@@ -225,6 +223,15 @@ class OneTimeOrderViewSet(viewsets.ViewSet):
                         )
 
                     order_id = request.query_params.get("orderId")
+
+                    if not order_id:
+                        return response_fun(
+                            RESPONSE_INVALID,
+                            {
+                                "message": "orderId is required.",
+                                "code": ERROR_CODE_BAD_REQUEST
+                            }
+                        )
 
                     order = OneTimeOrderModel.objects.filter(id=order_id).first()
 
