@@ -7,20 +7,13 @@ from .utils import generate_salt, check_password, encode_token, store_token, che
 from dc.utils import response_fun
 from dc.constant import RESPONSE_INVALID, RESPONSE_SUCCESS, RESPONSE_ERROR
 from dc.errors import ERROR_CODE_UNAUTHORIZED, ERROR_CODE_NOT_FOUND
-from django.core.exceptions import ValidationError
-from django.core.validators import validate_email
 from django.contrib.auth.hashers        import make_password
 from dc.parameters import TOKEN
 from dc.utils import authenticate_and_get_user
 from dc.errors import *
 from dc.parameters import *
 from users.service import UserService
-from address.serializers import GetAddressSerializer
 from dc.constant import *
-
-from order.models import OrderModel
- 
-from onetimeorder.models import OneTimeOrderModel
 from django.utils import timezone
 
 from django.db.models import (
@@ -41,7 +34,6 @@ class UserViewSet(viewsets.ViewSet):
         try:
             request_data =  request.data.copy()
             phoneNumber = request_data.get('phoneNumber').lower()
-            subOwnerId = request_data.get('subOwnerId')
             phoneNumber = str(phoneNumber).strip()
 
              # Validate phone number
@@ -67,32 +59,12 @@ class UserViewSet(viewsets.ViewSet):
             if UserModel.objects.filter(phoneNumber=phoneNumber).exists():
                  return response_fun(RESPONSE_INVALID, {'message': "User already exists", 'code': ERROR_CODE_UNAUTHORIZED})
             
-            print('subOwnerId ', subOwnerId)
-
-            sub_owner = UserModel.objects.filter(
-                id=subOwnerId,
-                userType=UserModel.SUB_OWNER,
-                is_active=True
-            ).first()
-
-            print('sub_owner ', sub_owner)
-
-            if sub_owner is None:
-                return response_fun(
-                    RESPONSE_ERROR,
-                    {
-                        "message": "SubOwner not found.",
-                        "code": ERROR_CODE_UNAUTHORIZED,
-                    },
-                )
-            
             print('request_data ', request_data)
             random_salt = generate_salt()  # Generate salt
             request_data['password'] = make_password(request_data['password'], random_salt)
             request_data['salt'] = random_salt
 
             
-
             serializer = CreateUserSerializer(data=request_data)
             if serializer.is_valid():
                 serializer.save()
@@ -132,10 +104,7 @@ class UserViewSet(viewsets.ViewSet):
            
             if not user:
                 return response_fun(RESPONSE_INVALID, {'message': 'User does not exist', 'code': ERROR_CODE_UNAUTHORIZED})
-            
-            if user.userType != UserModel.USER:
-                 return response_fun(RESPONSE_INVALID, {'message': 'Permission issue. Only for customer login!', 'code': ERROR_CODE_UNAUTHORIZED})
-            
+                 
             salt =  user.salt
             print('SSSSSS salt ', salt)
             
@@ -245,7 +214,7 @@ class UserViewSet(viewsets.ViewSet):
                 return error
             print('ssss s', user)
 
-            serializer = GetProfileSerializer(instance=user)
+            serializer = UserBasicInfoSerializer(instance=user)
             return response_fun(
                 RESPONSE_SUCCESS,
                 {
@@ -286,7 +255,7 @@ class UserViewSet(viewsets.ViewSet):
                 id = userId
             )
 
-            serializer = ProfileAddressSerializer(customer)
+            serializer = GetDeliverySerializer(customer)
             return response_fun(
                 RESPONSE_SUCCESS,
                 {
@@ -368,16 +337,7 @@ class UserViewSet(viewsets.ViewSet):
 
                     if error:
                         return error
-
-                    if user.userType != UserModel.SUB_OWNER:
-                        return response_fun(
-                            RESPONSE_INVALID,
-                            {
-                                "message": "Only Sub Owner has permission.",
-                                "code": RESPONSE_INVALID,
-                            }
-                        )
-
+                    
                     today = timezone.localdate()
 
                     users = (
@@ -385,28 +345,29 @@ class UserViewSet(viewsets.ViewSet):
                             userType=UserModel.USER
                         )
                         .annotate(
-            
-                            subscription_order_count=Count(
-                                "ordermodel",
+
+                            subscription_order_count = Count(
+                                "user_orders",
                                 filter=Q(
-                                    ordermodel__delivery_date=today,
-                                    ordermodel__status=  PENDING,
+                                    user_orders__delivery_date=today,
+                                    user_orders__status=PENDING,
                                 ),
                                 distinct=True,
                             ),
                             one_time_order_count=Count(
-                                "onetimeordermodel",
+                                "user_one_time_order",
                                 filter=Q(
-                                    onetimeordermodel__delivery_date=today,
-                                    onetimeordermodel__status= PENDING,
+                                    user_one_time_order__delivery_date=today,
+                                    user_one_time_order__status= PENDING,
                                 ),
                                 distinct=True,
                             ),
                         )
                         .annotate(
                             total_order_count=F("subscription_order_count")
-                            + F("one_time_order_count")
-                        )
+                            + F("one_time_order_count"),
+                            
+                        )   
                         .order_by(
                             "-total_order_count",
                             "name",
@@ -424,6 +385,7 @@ class UserViewSet(viewsets.ViewSet):
                     )
 
                 except Exception as e:
+                    print('eeee ',)
                     return response_fun(
                         RESPONSE_INVALID,
                         {

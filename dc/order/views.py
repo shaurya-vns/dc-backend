@@ -11,8 +11,6 @@ from dc.utils import authenticate_and_get_user
 from dc.errors import *
 from dc.parameters import *
 from order.serializers import OrderListSerializer
-from owner.serializers import UpdateOrderStatusSerializer
-
 from dc.constant import *
   
 
@@ -22,7 +20,7 @@ class OrderViewSet(viewsets.ViewSet):
             tags=["Subscription Order"],
             operation_description="Get today order",
             responses={200: OrderListSerializer, 404: 'Not found'},
-            manual_parameters=[TOKEN, USER_ID, DELIVERY_DATE]
+            manual_parameters=[TOKEN, DELIVERY_DATE]
         )
         @action(detail=False, methods=["get"])
         def subscription_user_order_list(self, request):
@@ -34,28 +32,19 @@ class OrderViewSet(viewsets.ViewSet):
                     
                 if error:
                    return error
+                
+                filters = {}
 
-                user_id = request.query_params.get("userId")
+                filters["user_id"] = request.query_params.get("userId")
+                 
                 delivery_date = request.query_params.get("delivery_date")
 
-                if not user_id:
-                        return response_fun(
-                            RESPONSE_INVALID,
-                            {"message": "user_id is required"},
-                        )
-                    
-
-                filters = {
-                        "user_id": user_id
-                    }
-
-                    # ✅ OPTIONAL DATE FILTER
                 if delivery_date:
                         filters["delivery_date"] = delivery_date
 
                 orders = OrderModel.objects.filter(
                      **filters
-                ).order_by("-delivery_date")
+                ).order_by("delivery_date")
 
                 print('request orders ', orders)
 
@@ -75,79 +64,148 @@ class OrderViewSet(viewsets.ViewSet):
             
 
         @swagger_auto_schema(
-                    request_body=UpdateOrderStatusSerializer,
-                    tags=["Subscription Order"],
-                    operation_description="Update order status",
-                    responses={200: UpdateOrderStatusSerializer},
-                    manual_parameters=[TOKEN, ORDER_ID]
-                )
+            tags=["Subscription Order"],
+            request_body=RejectOrderSerializer,
+            manual_parameters=[TOKEN]
+        )
         @action(detail=False, methods=["put"])
-        def update_sub_order_status(self, request):
-                    try:
-                        user, error = authenticate_and_get_user(request)
+        def vendor_reject(self, request,  pk=None):
 
-                        if error:
-                            return error
-                        
-                        if user.userType != UserModel.SUB_OWNER:
-                            return response_fun(
-                                RESPONSE_INVALID,
-                                {
-                                    "message": "Only sub owner is aloowed!.",
-                                    "code": ERROR_CODE_BAD_REQUEST
-                                }
-                            )
+            try:
 
-                        order_id = request.query_params.get("orderId")
+                user, error = authenticate_and_get_user(request)
 
-                        if not order_id:
-                            return response_fun(
-                                RESPONSE_INVALID,
-                                {
-                                    "message": "orderId is required.",
-                                    "code": ERROR_CODE_BAD_REQUEST
-                                }
-                            )
+                if error:
+                    return error
+                
+                
+                order = OrderModel.objects.filter(
+                    id= pk,
+                ).first()
 
-                        order = OrderModel.objects.filter( id=order_id).first()
+                if order is None:
 
-                        if not order:
-                            return response_fun(
-                                RESPONSE_INVALID,
-                                {
-                                    "message": "Order not found.",
-                                    "code": ERROR_CODE_NOT_FOUND
-                                }
-                            )
+                    return response_fun(
+                        RESPONSE_INVALID,
+                        {
+                            "message": "Order not found."
+                        }
+                    )
 
-                        serializer = UpdateOrderStatusSerializer(data=request.data)
+                order.status = REJECTED
+                order.rejectReason = request.data.get("rejectReason")
 
-                        if not serializer.is_valid():
-                            return response_fun(
-                                RESPONSE_INVALID,
-                                {
-                                    "errors": serializer.errors,
-                                    "code": ERROR_CODE_BAD_REQUEST
-                                }
-                            )
+                order.save()
 
-                        order.status = serializer.validated_data["status"]
-                        order.save(update_fields=["status"])
+                return response_fun(
+                    RESPONSE_SUCCESS,
+                    {
+                        "message": "Order rejected by vendor"
+                    }
+                )
+            
+            
+            except Exception as e:
+                    return response_fun(
+                        RESPONSE_INVALID,
+                        {
+                            "message": str(e)
+                        }
+                    )
+            
+        @swagger_auto_schema(
+            tags=["Subscription Order"],
+            request_body=CancelOrderSerializer,
+            manual_parameters=[TOKEN]
+        )
+        @action(detail=False, methods=["put"])
+        def user_cancel(self, request,  pk=None):
 
-                        return response_fun(
+            try:
+
+                user, error = authenticate_and_get_user(request)
+
+                if error:
+                    return error
+                
+                
+                order = OrderModel.objects.filter(
+                    id= pk,
+                    user = user
+                ).first()
+
+                if order is None:
+
+                    return response_fun(
+                        RESPONSE_INVALID,
+                        {
+                            "message": "Order not found."
+                        }
+                    )
+
+                order.status = CANCELLED
+                order.cancelReason = request.data.get("cancelReason")
+
+                order.save()
+
+                return response_fun(
+                    RESPONSE_SUCCESS,
+                    {
+                        "message": "Order cancel by user"
+                    }
+                )
+            
+            
+            except Exception as e:
+                    return response_fun(
+                        RESPONSE_INVALID,
+                        {
+                            "message": str(e)
+                        }
+                    )
+            
+
+        @swagger_auto_schema(
+            tags=["Subscription Order"],
+            manual_parameters=[TOKEN]
+        )
+        @action(detail=False, methods=["put"])
+        def vendor_delivery(self, request,  pk=None):
+
+            try:
+
+                user, error = authenticate_and_get_user(request)
+
+                if error:
+                    return error
+                
+                order = OrderModel.objects.filter(
+                    id= pk,
+                ).first()
+
+                if order is None:
+
+                    return response_fun(
+                        RESPONSE_INVALID,
+                        {
+                            "message": "Order not found."
+                        }
+                    )
+                
+                order.status = DELIVERED
+                order.save()
+                return response_fun(
                             RESPONSE_SUCCESS,
                             {
-                                "message": "Order status updated successfully."
+                                "message": "On demand order is delivered."
                             }
                         )
-
-                    except Exception as e:
-                        return response_fun(
-                            RESPONSE_INVALID,
-                            {
-                                "message": str(e),
-                                "code": ERROR_CODE_NOT_FOUND
-                            }
-                        )
-
-                
+            
+            
+            except Exception as e:
+                    return response_fun(
+                        RESPONSE_INVALID,
+                        {
+                            "message": str(e)
+                        }
+                    )

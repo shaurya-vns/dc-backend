@@ -15,6 +15,8 @@ from dc.errors import *
 from dc.parameters import *
 from address.serializers import AddAddressSerializer
 from address.models import AddressModel
+from onetimeorder.models import OneTimeOrderModel
+from ondemand.models import OnDemandModel
  
 
 class AddressViewSet(viewsets.ViewSet):
@@ -238,6 +240,22 @@ class AddressViewSet(viewsets.ViewSet):
                                 "code": ERROR_CODE_NOT_FOUND
                             }
                         )
+                    
+                    if OneTimeOrderModel.objects.filter(address=address).exists():
+                       return response_fun(
+                            RESPONSE_INVALID,
+                            {
+                                "message": "This address is associated with existing orders and cannot be deleted."
+                            },
+                        )
+                    
+                    if OnDemandModel.objects.filter(address=address).exists():
+                       return response_fun(
+                            RESPONSE_INVALID,
+                            {
+                                "message": "This address is associated with existing orders and cannot be deleted."
+                            },
+                        )
 
                     address.delete()
 
@@ -250,6 +268,7 @@ class AddressViewSet(viewsets.ViewSet):
             
                 
                 except Exception as e:
+                        print('eee ', e)
                         return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
                 
 

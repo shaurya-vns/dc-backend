@@ -34,11 +34,11 @@ class ProductModel(BaseModel):
         ("sun", "Sunday"),
     )
 
-    subOwner = models.ForeignKey(
+    vendor = models.ForeignKey(
         UserModel,
         on_delete=models.CASCADE,
         related_name="products",
-        limit_choices_to={"userType": UserModel.SUB_OWNER},
+        limit_choices_to={"userType": UserModel.VENDOR},
         null=True,
         blank=True
     )
@@ -89,6 +89,14 @@ class ProductModel(BaseModel):
         blank=True,
         related_name="products"
     )
+
+    rating = models.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        default=0.0,
+    )
+
+    totalReviews = models.PositiveIntegerField(default=0)
 
 
     def __str__(self):

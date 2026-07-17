@@ -6,6 +6,7 @@ from users.models import UserModel
 from address.models import AddressModel
 from dc.constant import *
 
+
 class OnDemandModel(BaseModel):
 
    
@@ -23,11 +24,20 @@ class OnDemandModel(BaseModel):
 
     user = models.ForeignKey(
         UserModel,
-        on_delete=models.CASCADE,
-        related_name="on_demand_orders"
+        related_name="user_on_demand_orders",
+        on_delete=models.CASCADE
     )
 
-    subOwner = models.ForeignKey(
+    delivery = models.ForeignKey(
+        UserModel,
+        related_name="delivery_on_demand_orders",
+        limit_choices_to={"userType": UserModel.DELIVERY},
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+ 
+    vendor = models.ForeignKey(
         UserModel,
         on_delete=models.CASCADE,
         related_name="received_on_demand_orders"
@@ -99,6 +109,7 @@ class OnDemandModel(BaseModel):
         null=True
     )
 
+    
     @staticmethod
     def generate_order_number():
         while True:

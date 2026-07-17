@@ -24,16 +24,18 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/users/',include('users.urls')),
     path('api/address/',include('address.urls')),
-    path('api/sub-owners/',include('owner.urls')),
+    path('api/vendors/',include('vendor.urls')),
+    path('api/delivery/',include('delivery.urls')),
     path('api/products/',include('product.urls')),
     path('api/subscriptions/',include('subscription.urls')),
     path('api/subscription-orders/',include('order.urls')),
     path('api/dashboard/',include('dashboard.urls')),
     path('api/reviews/',include('reviews.urls')),
     path('api/one-time-orders/',include('onetimeorder.urls')),
-    path('api/support/',include('support.urls')),
-    path('api/ondemand/',include('ondemand.urls')),
-
+    path('api/supports/',include('support.urls')),
+    path('api/on-demand-orders/',include('ondemand.urls')),
+    path('api/contact-us/',include('contact_us.urls')),
+    path('api/ai/',include('ai.urls')),
 
    
    # Swagger URLs

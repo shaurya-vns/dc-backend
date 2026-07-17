@@ -55,7 +55,7 @@ class OnDemandViewSet(viewsets.ViewSet):
                 )
 
             except Exception as e:
-
+                print('eeee e ', e)
                 return response_fun(
                     RESPONSE_INVALID,
                     {
@@ -66,7 +66,7 @@ class OnDemandViewSet(viewsets.ViewSet):
             
         @swagger_auto_schema(
             tags=["On Demand"],
-            manual_parameters=[TOKEN, USER_ID]
+            manual_parameters=[TOKEN]
         )
         @action(detail=False, methods=["get"])
         def on_demand_list(self, request):
@@ -78,13 +78,15 @@ class OnDemandViewSet(viewsets.ViewSet):
                 if error:
                     return error
                 
-                user_id = request.query_params.get("userId")
+                filters = {}
+
+                filters["user_id"] = request.query_params.get("userId")
                 
                 orders = OnDemandModel.objects.filter(
-                        user_id= user_id
+                          **filters
                     ).select_related(
                         "address",
-                        "subOwner"
+                        "vendor"
                     ).order_by("-created_at")
                      
 
@@ -254,7 +256,7 @@ class OnDemandViewSet(viewsets.ViewSet):
 
                 order = OnDemandModel.objects.filter(
                     id= pk,
-                    subOwner=user
+                  
                 ).first()
 
                 if order is None:
@@ -290,6 +292,7 @@ class OnDemandViewSet(viewsets.ViewSet):
                 
         @swagger_auto_schema(
             tags=["On Demand"],
+            request_body=RejectUserDemandSerializer,
             manual_parameters=[TOKEN]
         )
         @action(detail=False, methods=["put"])
@@ -305,7 +308,7 @@ class OnDemandViewSet(viewsets.ViewSet):
                 
                 order = OnDemandModel.objects.filter(
                     id= pk,
-                    subOwner=user
+                    
                 ).first()
 
                 if order is None:
@@ -354,9 +357,11 @@ class OnDemandViewSet(viewsets.ViewSet):
                     if error:
                         return error
                     
+
+                    
                     order = OnDemandModel.objects.filter(
                         id= pk,
-                        subOwner=user
+                         
                     ).first()
 
                     if order is None:
@@ -405,9 +410,11 @@ class OnDemandViewSet(viewsets.ViewSet):
                 if error:
                     return error
                 
+                 
+                
                 order = OnDemandModel.objects.filter(
                     id= pk,
-                    subOwner=user
+                  
                 ).first()
 
                 if order is None:
@@ -426,6 +433,60 @@ class OnDemandViewSet(viewsets.ViewSet):
                             RESPONSE_SUCCESS,
                             {
                                 "message": "Payment successfully done."
+                            }
+                        )
+
+                return response_fun(
+                    RESPONSE_INVALID,
+                    {
+                        "message": "invalid data."
+                    }
+                )
+            
+            
+            except Exception as e:
+                    return response_fun(
+                        RESPONSE_INVALID,
+                        {
+                            "message": str(e)
+                        }
+                    )
+            
+        @swagger_auto_schema(
+            tags=["On Demand"],
+            manual_parameters=[TOKEN]
+        )
+        @action(detail=False, methods=["put"])
+        def vendor_delivery(self, request,  pk=None):
+
+            try:
+
+                user, error = authenticate_and_get_user(request)
+
+                if error:
+                    return error
+                
+                order = OnDemandModel.objects.filter(
+                    id= pk,
+                    
+                ).first()
+
+                if order is None:
+
+                    return response_fun(
+                        RESPONSE_INVALID,
+                        {
+                            "message": "Order not found."
+                        }
+                    )
+                
+                if order.status ==  PAID:
+                    order.status = DELIVERED
+                    order.save()
+                    return response_fun(
+                            RESPONSE_SUCCESS,
+                            {
+                                "message": "On demand order is delivered."
                             }
                         )
 

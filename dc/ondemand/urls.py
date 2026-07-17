@@ -15,4 +15,6 @@ urlpatterns = [
     path("vendor/<int:pk>/approve", OnDemandViewSet.as_view({"put": "vendor_approve"})),
     path("vendor/<int:pk>/amount", OnDemandViewSet.as_view({"put": "vendor_update_amount"})),
     path("vendor/<int:pk>/payment", OnDemandViewSet.as_view({"put": "vendor_approve_payment"})),
+
+    path("vendor/<int:pk>/delivery", OnDemandViewSet.as_view({"put": "vendor_delivery"})),
 ]

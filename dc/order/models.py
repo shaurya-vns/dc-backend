@@ -18,7 +18,17 @@ class OrderModel(BaseModel):
 
     user = models.ForeignKey(
         UserModel,
+        related_name="user_orders",
         on_delete=models.CASCADE
+    )
+
+    delivery = models.ForeignKey(
+        UserModel,
+        related_name="delivery_orders",
+        limit_choices_to={"userType": UserModel.DELIVERY},
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
     )
 
     meal_type = models.CharField(
@@ -40,6 +50,17 @@ class OrderModel(BaseModel):
     quantity = models.PositiveSmallIntegerField(
         default=1
     )
+
+    rejectReason = models.TextField(
+        blank=True,
+        null=True
+    )
+
+    cancelReason = models.TextField(
+        blank=True,
+        null=True
+    )
+
 
     class Meta:
         unique_together = (

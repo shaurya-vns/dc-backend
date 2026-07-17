@@ -1,11 +1,8 @@
 from .models import UserModel
 from rest_framework import serializers
-from owner.serializers import SubOwnerSerializer
 from address.serializers import GetAddressSerializer
  
 class CreateUserSerializer(serializers.ModelSerializer):
-    subOwnerId = serializers.IntegerField(write_only=True)
-
     class Meta:
         model = UserModel
         fields = (
@@ -17,7 +14,6 @@ class CreateUserSerializer(serializers.ModelSerializer):
             "deviceToken",
             "deviceId",
             "salt",
-            "subOwnerId",
             'userType'
         )
 
@@ -27,21 +23,13 @@ class CreateUserSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        sub_owner_id = validated_data.pop("subOwnerId")
-
-        sub_owner = UserModel.objects.filter(
-            id=sub_owner_id,
-            userType=UserModel.SUB_OWNER,
-            is_active=True,
-        ).first()
-
-        if sub_owner is None:
-            raise serializers.ValidationError("Invalid SubOwner.")
-
-        validated_data["parent"] = sub_owner
-        validated_data["userType"] = UserModel.USER
-
-        return UserModel.objects.create(**validated_data)
+       vendor = UserModel.objects.filter(
+           userType=UserModel.VENDOR,
+           is_active=True,
+       ).first()
+       validated_data["parent"] = vendor
+       
+       return UserModel.objects.create(**validated_data)
     
 
 class LogInSerializer(serializers.Serializer):
@@ -49,20 +37,6 @@ class LogInSerializer(serializers.Serializer):
     password = serializers.CharField()
     class Meta:
         ref_name = None
-
-
-class SubOwnerListSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = UserModel
-        fields = (
-            "id",
-            "name",
-            "phoneNumber",
-            "profileImage",
-            "is_active",
-        )
-
 
 
 class ChangeSubscriptionSerializer(serializers.Serializer):
@@ -83,31 +57,21 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
             "profileImage"
         ]
 
-
-
-class GetProfileSerializer(serializers.ModelSerializer):
-
-    parent = SubOwnerSerializer(read_only=True)
-    address = GetAddressSerializer(read_only=True)
-
+class GetDeliverySerializer(serializers.ModelSerializer):
     class Meta:
         model = UserModel
         fields = (
             "id",
             "name",
             "phoneNumber",
-            "platform",
-            "deviceToken",
-            "deviceId",
-            "parent",
-            'userType',
-            'address'
+            'userType'
         )
 
 class UserListSerializer(serializers.ModelSerializer):
     subscription_order_count = serializers.IntegerField(read_only=True)
     one_time_order_count = serializers.IntegerField(read_only=True)
     total_order_count = serializers.IntegerField(read_only=True)
+    
 
     class Meta:
         model = UserModel
@@ -118,22 +82,41 @@ class UserListSerializer(serializers.ModelSerializer):
             "subscription_order_count",
             "one_time_order_count",
             "total_order_count",
+           
         )
 
+  
+class UserInfoSerializer(serializers.ModelSerializer):
+    address = serializers.SerializerMethodField()
 
-
-
-class ProfileAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserModel
         fields = (
             "id",
             "name",
             "phoneNumber",
-            "platform",
-            "deviceToken",
-            "deviceId",
-            "parent",
-            'userType',
-        
+            "profileImage",
+            "address"
+        )
+
+    def get_address(self, obj):
+        default_address = obj.addresses.filter(isDefault=True).first()
+
+        if not default_address:
+            default_address = obj.addresses.first()
+
+        if default_address:
+            return GetAddressSerializer(default_address).data
+
+        return None
+
+class UserBasicInfoSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserModel
+        fields = (
+            "id",
+            "name",
+            "phoneNumber",
+            'userType'
         )

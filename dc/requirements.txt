@@ -32,3 +32,8 @@ idna==3.11
 
 # Production Server
 gunicorn==23.0.0
+
+
+pgvector==0.4.1
+groq
+psycopg[binary]==3.2.12

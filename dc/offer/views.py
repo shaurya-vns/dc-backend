@@ -14,6 +14,7 @@ from dc.parameters import *
 from django.utils import timezone
 from datetime import timedelta
 from order.serializers import OrderListSerializer
+from order.models import OrderModel
   
 
 class OrderViewSet(viewsets.ViewSet):

@@ -16,7 +16,7 @@ from order.models import OrderModel
 from subscription.models import SubscriptionModel
 from order.serializers import OrderListSerializer
 from users.models import UserModel
-from users.serializers import SubOwnerListSerializer, LogInSerializer, CreateUserSerializer
+from users.serializers import LogInSerializer, CreateUserSerializer
 from dc.constant import RESPONSE_INVALID, RESPONSE_SUCCESS, RESPONSE_ERROR
 from dc.errors import ERROR_CODE_UNAUTHORIZED, ERROR_CODE_NOT_FOUND
 from users.utils import generate_salt, check_password, encode_token, store_token, check_password_match

@@ -11,20 +11,27 @@ from dc.constant import *
 
 class OneTimeOrderModel(BaseModel):
 
-
-    user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
-
-    subOwner = models.ForeignKey(
+    
+    user = models.ForeignKey(
         UserModel,
-        on_delete=models.CASCADE,
-        related_name="one_time_orders"
+        related_name="user_one_time_order",
+        on_delete=models.CASCADE
+    )
+
+    delivery = models.ForeignKey(
+        UserModel,
+        related_name="delivery_one_time_order",
+        limit_choices_to={"userType": UserModel.DELIVERY},
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
     )
 
     product = models.ForeignKey(
         ProductModel,
         on_delete=models.PROTECT
     )
-
+ 
     address = models.ForeignKey(
         AddressModel,
         on_delete=models.PROTECT
@@ -52,6 +59,16 @@ class OneTimeOrderModel(BaseModel):
     status = models.PositiveSmallIntegerField(
         choices=STATUS_CHOICES,
         default=PENDING
+    )
+
+    rejectReason = models.TextField(
+        blank=True,
+        null=True
+    )
+
+    cancelReason = models.TextField(
+        blank=True,
+        null=True
     )
 
     order_number =models.CharField(

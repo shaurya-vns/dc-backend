@@ -8,7 +8,7 @@ from order.models import OrderModel
 from datetime import date
 from datetime import timedelta
 from product.serializers import ProductDetailSerializer, ProductPricingSerializer
-from users.serializers import  GetProfileSerializer
+from users.serializers import  UserBasicInfoSerializer
 from address.serializers  import GetAddressSerializer
 
 PLAN_TYPE_MAPPING = {
@@ -91,9 +91,7 @@ class SubscriptionListSerializer(serializers.ModelSerializer):
         read_only=True
     )
 
-    user = GetProfileSerializer(
-        read_only=True
-    )
+    user = UserBasicInfoSerializer(read_only=True)
 
     address = GetAddressSerializer(read_only=True)
 

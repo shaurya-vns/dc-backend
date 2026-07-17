@@ -3,8 +3,7 @@ from onetimeorder.models import OneTimeOrderModel
 from product.serializers import ProductDetailSerializer
 from address.serializers import GetAddressSerializer
 from offer.serializers import OfferSerializer
-from owner.serializers import SubOwnerSerializer
-from users.serializers import GetProfileSerializer
+from users.serializers import  GetDeliverySerializer, UserBasicInfoSerializer
 from django.utils import timezone
 
 
@@ -45,15 +44,17 @@ class OneTimeOrderListSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-from rest_framework import serializers
+
 
 class OneTimeOrderDetailSerializer(serializers.ModelSerializer):
     product = ProductDetailSerializer(read_only=True)
     offer = OfferSerializer(read_only=True)
-    address = GetAddressSerializer(read_only=True)
-    user = GetProfileSerializer(read_only=True)
-    subOwner = SubOwnerSerializer(read_only=True)
 
+    delivery = GetDeliverySerializer(read_only=True)
+
+    address = GetAddressSerializer(read_only=True)
+    user = UserBasicInfoSerializer(read_only=True)
+   
     isToday = serializers.SerializerMethodField()
 
     amount = serializers.DecimalField(
@@ -74,7 +75,6 @@ class OneTimeOrderDetailSerializer(serializers.ModelSerializer):
             "id",
             "status",
             "user",
-            "subOwner",
             "product",
             "quantity",
             "amount",
@@ -84,8 +84,29 @@ class OneTimeOrderDetailSerializer(serializers.ModelSerializer):
             "meal_type",
             "delivery_date",
             'order_number',
-             "isToday",
+            "isToday",
+            'rejectReason',
+            'cancelReason',
+            'delivery'
         )
 
     def get_isToday(self, obj):
         return obj.delivery_date == timezone.localdate()
+    
+
+
+class CancelOneTimeOrderSerializer(serializers.Serializer):
+    cancelReason = serializers.CharField(
+        required=True,
+        allow_blank=False,
+        max_length=500,
+    )
+
+
+
+class RejectOneTimeSerializer(serializers.Serializer):
+    rejectReason = serializers.CharField(
+        required=True,
+        allow_blank=False,
+        max_length=500,
+    )

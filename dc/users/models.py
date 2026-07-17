@@ -4,13 +4,13 @@ from dc.base_model import BaseModel
 # Create your models here.
 class UserModel(BaseModel):
     OWNER = 1
-    SUB_OWNER = 2
+    VENDOR = 2
     USER = 3
     DELIVERY = 4
 
     USER_TYPES = (
         (OWNER, "Owner"),
-        (SUB_OWNER, "Sub Owner"),
+        (VENDOR, "Vendor"),
         (USER, "Customer"),
         (DELIVERY, "Delivery"),
     )
@@ -28,7 +28,7 @@ class UserModel(BaseModel):
 
     userType = models.IntegerField(
         choices=USER_TYPES,
-        default=SUB_OWNER
+        default=USER
     )
 
     platform = models.IntegerField(

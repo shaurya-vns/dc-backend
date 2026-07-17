@@ -50,12 +50,28 @@ PRODUCT_ORDER_ID = openapi.Parameter(
     required=True,
 )
 
+TICKET_ID = openapi.Parameter(
+    "ticketId",
+    openapi.IN_QUERY,
+    type=openapi.TYPE_INTEGER,
+    required=True,
+)
+
+CONTACT_US_ID = openapi.Parameter(
+    "contactUsId",
+    openapi.IN_QUERY,
+    type=openapi.TYPE_INTEGER,
+    required=True,
+)
+
+
+
 DELIVERY_DATE = openapi.Parameter(
     'delivery_date',
     openapi.IN_QUERY,
     description="Filter by delivery date (YYYY-MM-DD). If not provided, returns today's orders.",
     type=openapi.TYPE_STRING,
-    required=True
+    required=False
 )
  
 

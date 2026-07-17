@@ -13,7 +13,6 @@ from dc.errors import *
 from dc.parameters import *
 from django.utils import timezone
 from django.db import transaction
-from owner.serializers import UpdateOrderStatusSerializer
 from onetimeorder.serializers import OneTimeOrderCreateSerializer
 from onetimeorder.serializers import OneTimeOrderDetailSerializer
 from dc.constant import *
@@ -21,256 +20,312 @@ from address.models import AddressModel
 
 class OneTimeOrderViewSet(viewsets.ViewSet):
 
-    @swagger_auto_schema(
-        tags=["One Time Order"],
-        request_body=OneTimeOrderCreateSerializer,
-        manual_parameters=[TOKEN]
-    )
-    @action(detail=False, methods=["post"])
-    @transaction.atomic
-    def create_order(self, request):
-        try:
+        @swagger_auto_schema(
+            tags=["One Time Order"],
+            request_body=OneTimeOrderCreateSerializer,
+            manual_parameters=[TOKEN]
+        )
+        @action(detail=False, methods=["post"])
+        @transaction.atomic
+        def create_order(self, request):
+            try:
 
-            user, error = authenticate_and_get_user(request)
+                user, error = authenticate_and_get_user(request)
 
-            if error:
-                return error
+                if error:
+                    return error
 
-            if user.userType != UserModel.USER:
-                return response_fun(
-                    RESPONSE_INVALID,
-                    {
-                        "message": "Only customer allowed",
-                        "code": ERROR_CODE_BAD_REQUEST
-                    }
-                )
-
-            serializer = OneTimeOrderCreateSerializer(
-                data=request.data,
-                context={"user": user}
-            )
-
-            if not serializer.is_valid():
-                return response_fun(
-                    RESPONSE_INVALID,
-                    {
-                        "message": serializer.errors,
-                        "code": ERROR_CODE_BAD_REQUEST
-                    }
-                )
-
-            data = serializer.validated_data
-
-            product = data["product"]
-
-            # Product belongs to customer's SubOwner
-            if product.subOwner_id != user.parent_id:
-                return response_fun(
-                    RESPONSE_INVALID,
-                    {
-                        "message": "Invalid product.",
-                        "code": ERROR_CODE_BAD_REQUEST
-                    }
-                )
-
-            # Address validation
-            address = AddressModel.objects.filter(
-                id=data["addressId"],
-                user=user
-            ).first()
-
-            if not address:
-                return response_fun(
-                    RESPONSE_INVALID,
-                    {
-                        "message": "Invalid address.",
-                        "code": ERROR_CODE_BAD_REQUEST
-                    }
-                )
-
-            quantity = data["quantity"]
-            delivery_date = data["delivery_date"]
-
-            print('delivery_date ', delivery_date)
-    
-            final_amount =  product.product_price * quantity
-
-            order = OneTimeOrderModel.objects.create(
-                user=user,
-                subOwner=product.subOwner,
-                product=product,
-                address=address,
-                quantity=quantity,
-                amount=product.product_price,
-                final_amount=final_amount,
-                delivery_date=delivery_date,
-                meal_type=product.plan_type,
-                status= PENDING,
-            )
-
-            return response_fun(
-                RESPONSE_SUCCESS,
-                {
-                    "message": "Order placed successfully.",
-                    "data": {
-                        "id": order.id,
-                        "orderNumber": order.order_number,
-                        "discount": order.discount_amount,
-                        "final_amount": order.final_amount,
-                        "status": order.status
-                    }
-                }
-            )
-
-        except Exception as e:
-            print(e)
-
-            return response_fun(
-                RESPONSE_INVALID,
-                {
-                    "message": str(e),
-                    "code": ERROR_CODE_BAD_REQUEST
-                }
-            )
-        
-    @swagger_auto_schema(
-       tags=["One Time Order"],
-            operation_description="Get User all One-Time Orders",
-            manual_parameters=[TOKEN, USER_ID, DELIVERY_DATE]
-    )
-    @action(detail=False, methods=["get"])
-    def user_one_time_order_list(self, request):
-                try:
-                    user, error = authenticate_and_get_user(request)
-
-                    if error:
-                        return error
-                    
-            
-                    user_id = request.query_params.get("userId")
-                    delivery_date = request.query_params.get("delivery_date")
-
-                    if not user_id:
-                        return response_fun(
-                            RESPONSE_INVALID,
-                            {"message": "user_id is required"},
-                        )
-                    
-
-                    filters = {
-                        "user_id": user_id,
-                    }
-
-            
-                    if delivery_date:
-                        filters["delivery_date"] = delivery_date
-                   
-                    
-                    orders = OneTimeOrderModel.objects.filter(
-                            **filters
-                        ).select_related(
-                            "product",
-                            "offer",
-                            "address"
-                        ).order_by("delivery_date")
-
-
-                    serializer = OneTimeOrderDetailSerializer(
-                        orders,
-                        many=True
-                    )
-
-                    return response_fun(
-                        RESPONSE_SUCCESS,
-                        {
-                            "data": serializer.data
-                        }
-                    )
-
-                except Exception as e:
-                    print(e)
+                if user.userType != UserModel.USER:
                     return response_fun(
                         RESPONSE_INVALID,
                         {
-                            "message": str(e),
+                            "message": "Only customer allowed",
                             "code": ERROR_CODE_BAD_REQUEST
                         }
                     )
-                
 
-    @swagger_auto_schema(
-                request_body=UpdateOrderStatusSerializer,
-                tags=["One Time Order"],
-                operation_description="Update one time order status",
-                responses={200: UpdateOrderStatusSerializer},
-                manual_parameters=[TOKEN, ORDER_ID]
-            )
-    @action(detail=False, methods=["put"])
-    def update_onetime_order_status(self, request):
-                try:
-                    user, error = authenticate_and_get_user(request)
+                serializer = OneTimeOrderCreateSerializer(
+                    data=request.data,
+                    context={"user": user}
+                )
 
-                    if error:
-                        return error
-                    
-                    if user.userType != UserModel.SUB_OWNER:
-                        return response_fun(
-                            RESPONSE_INVALID,
-                            {
-                                "message": "Only sub owner is aloowed!.",
-                                "code": ERROR_CODE_BAD_REQUEST
-                            }
-                        )
-
-                    order_id = request.query_params.get("orderId")
-
-                    if not order_id:
-                        return response_fun(
-                            RESPONSE_INVALID,
-                            {
-                                "message": "orderId is required.",
-                                "code": ERROR_CODE_BAD_REQUEST
-                            }
-                        )
-
-                    order = OneTimeOrderModel.objects.filter(id=order_id).first()
-
-                    if not order:
-                        return response_fun(
-                            RESPONSE_INVALID,
-                            {
-                                "message": "One time Order not found.",
-                                "code": ERROR_CODE_NOT_FOUND
-                            }
-                        )
-
-                    serializer = UpdateOrderStatusSerializer(data=request.data)
-
-                    if not serializer.is_valid():
-                        return response_fun(
-                            RESPONSE_INVALID,
-                            {
-                                "errors": serializer.errors,
-                                "code": ERROR_CODE_BAD_REQUEST
-                            }
-                        )
-
-                    order.status = serializer.validated_data["status"]
-                    order.save(update_fields=["status"])
-
-                    return response_fun(
-                        RESPONSE_SUCCESS,
-                        {
-                            "message": "One time Order status updated successfully."
-                        }
-                    )
-
-                except Exception as e:
+                if not serializer.is_valid():
                     return response_fun(
                         RESPONSE_INVALID,
                         {
-                            "message": str(e),
-                            "code": ERROR_CODE_NOT_FOUND
+                            "message": serializer.errors,
+                            "code": ERROR_CODE_BAD_REQUEST
                         }
                     )
-          
+
+                data = serializer.validated_data
+
+                product = data["product"]
+
+    
+                address = AddressModel.objects.filter(
+                    id=data["addressId"],
+                    user=user
+                ).first()
+
+                if not address:
+                    return response_fun(
+                        RESPONSE_INVALID,
+                        {
+                            "message": "Invalid address.",
+                            "code": ERROR_CODE_BAD_REQUEST
+                        }
+                    )
+
+                quantity = data["quantity"]
+                delivery_date = data["delivery_date"]
+
+                print('delivery_date ', delivery_date)
+        
+                final_amount =  product.product_price * quantity
+
+                delivery_boy = UserModel.objects.filter(
+                        userType=UserModel.DELIVERY,
+                        parent=product.vendor,
+                        is_active=True
+                    ).first()
+                
+
+                order = OneTimeOrderModel.objects.create(
+                    user=user,
+                    product=product,
+                    address=address,
+                    quantity=quantity,
+                    amount=product.product_price,
+                    final_amount=final_amount,
+                    delivery_date=delivery_date,
+                    meal_type=product.plan_type,
+                    status= PENDING,
+                    delivery  =  delivery_boy
+                )
+
+                return response_fun(
+                    RESPONSE_SUCCESS,
+                    {
+                        "message": "Order placed successfully.",
+                        "data": {
+                            "id": order.id,
+                            "orderNumber": order.order_number,
+                            "discount": order.discount_amount,
+                            "final_amount": order.final_amount,
+                            "status": order.status
+                        }
+                    }
+                )
+
+            except Exception as e:
+                print(e)
+
+                return response_fun(
+                    RESPONSE_INVALID,
+                    {
+                        "message": str(e),
+                        "code": ERROR_CODE_BAD_REQUEST
+                    }
+                )
+        
+        @swagger_auto_schema(
+        tags=["One Time Order"],
+                operation_description="Get User all One-Time Orders",
+                manual_parameters=[TOKEN, DELIVERY_DATE]
+        )
+        @action(detail=False, methods=["get"])
+        def user_one_time_order_list(self, request):
+                    try:
+                        user, error = authenticate_and_get_user(request)
+
+                        if error:
+                            return error
+                                         
+                        filters = {}
+
+                        filters["user_id"] = request.query_params.get("userId")
+
+                        delivery_date = request.query_params.get("delivery_date")
+
+                        if delivery_date:
+                            filters["delivery_date"] = delivery_date
+                    
+                        
+                        orders = OneTimeOrderModel.objects.filter(
+                                **filters
+                            ).select_related(
+                                "product",
+                                "offer",
+                                "address"
+                            ).order_by("delivery_date")
+
+
+                        serializer = OneTimeOrderDetailSerializer(
+                            orders,
+                            many=True
+                        )
+
+                        return response_fun(
+                            RESPONSE_SUCCESS,
+                            {
+                                "data": serializer.data
+                            }
+                        )
+
+                    except Exception as e:
+                        print(e)
+                        return response_fun(
+                            RESPONSE_INVALID,
+                            {
+                                "message": str(e),
+                                "code": ERROR_CODE_BAD_REQUEST
+                            }
+                        )
+                
+        @swagger_auto_schema(
+            tags=["One Time Order"],
+            request_body=RejectOneTimeSerializer,
+            manual_parameters=[TOKEN]
+        )
+        @action(detail=False, methods=["put"])
+        def vendor_reject(self, request,  pk=None):
+
+            try:
+
+                user, error = authenticate_and_get_user(request)
+
+                if error:
+                    return error
+                
+                
+                order = OneTimeOrderModel.objects.filter(
+                    id= pk,
+                ).first()
+
+                if order is None:
+
+                    return response_fun(
+                        RESPONSE_INVALID,
+                        {
+                            "message": "Order not found."
+                        }
+                    )
+
+                order.status = REJECTED
+                order.rejectReason = request.data.get("rejectReason")
+
+                order.save()
+
+                return response_fun(
+                    RESPONSE_SUCCESS,
+                    {
+                        "message": "Order rejected by vendor"
+                    }
+                )
+            
+            
+            except Exception as e:
+                    return response_fun(
+                        RESPONSE_INVALID,
+                        {
+                            "message": str(e)
+                        }
+                    )
+            
+        @swagger_auto_schema(
+            tags=["One Time Order"],
+            request_body=CancelOneTimeOrderSerializer,
+            manual_parameters=[TOKEN]
+        )
+        @action(detail=False, methods=["put"])
+        def user_cancel(self, request,  pk=None):
+
+            try:
+
+                user, error = authenticate_and_get_user(request)
+
+                if error:
+                    return error
+                
+                
+                order = OneTimeOrderModel.objects.filter(
+                    id= pk,
+                    user = user
+                ).first()
+
+                if order is None:
+
+                    return response_fun(
+                        RESPONSE_INVALID,
+                        {
+                            "message": "Order not found."
+                        }
+                    )
+
+                order.status = CANCELLED
+                order.cancelReason = request.data.get("cancelReason")
+
+                order.save()
+
+                return response_fun(
+                    RESPONSE_SUCCESS,
+                    {
+                        "message": "Order cancel by user"
+                    }
+                )
+            
+            
+            except Exception as e:
+                    return response_fun(
+                        RESPONSE_INVALID,
+                        {
+                            "message": str(e)
+                        }
+                    )
+            
+
+        @swagger_auto_schema(
+            tags=["One Time Order"],
+            manual_parameters=[TOKEN]
+        )
+        @action(detail=False, methods=["put"])
+        def vendor_delivery(self, request,  pk=None):
+
+            try:
+
+                user, error = authenticate_and_get_user(request)
+
+                if error:
+                    return error
+                
+                order = OneTimeOrderModel.objects.filter(
+                    id= pk,
+                ).first()
+
+                if order is None:
+
+                    return response_fun(
+                        RESPONSE_INVALID,
+                        {
+                            "message": "Order not found."
+                        }
+                    )
+                
+                order.status = DELIVERED
+                order.save()
+                return response_fun(
+                            RESPONSE_SUCCESS,
+                            {
+                                "message": "One time order is delivered."
+                            }
+                        )
+            
+            
+            except Exception as e:
+                    return response_fun(
+                        RESPONSE_INVALID,
+                        {
+                            "message": str(e)
+                        }
+                    )

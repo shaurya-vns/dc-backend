@@ -5,6 +5,7 @@ from .models import SubscriptionModel
 from order.models import OrderModel
 from django.utils import timezone
 from dc.constant import *
+from users.models import UserModel
 
 
 PLAN_TYPE_MAPPING = {
@@ -88,6 +89,13 @@ class SubscriptionService:
 
         total_days =  subscription.pricing_options.days
         quantity =  subscription.quantity
+        
+        delivery_boy = UserModel.objects.filter(
+                        userType=UserModel.DELIVERY,
+                        parent=subscription.product.vendor,
+                        is_active=True
+                    ).first()
+                
 
         for _ in range(total_days):
             for meal_type in meal_types:
@@ -98,6 +106,7 @@ class SubscriptionService:
                         meal_type=meal_type,
                         delivery_date=current_date,
                         quantity = quantity,
+                        delivery = delivery_boy
                     )
                 )
             current_date += timedelta(days=1)

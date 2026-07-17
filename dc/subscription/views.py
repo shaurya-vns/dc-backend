@@ -130,17 +130,7 @@ class SubscriptionViewSet(viewsets.ViewSet):
 
                     if error:
                        return error
-                    
-                    # ONLY CUSTOMER ALLOWED
-                    if user.userType != UserModel.SUB_OWNER:
-                        return response_fun(
-                            RESPONSE_INVALID,
-                            {
-                                "message": "Only admin can approve subscription payment.",
-                                "code": ERROR_CODE_NOT_FOUND
-                            }
-                        )
-                    
+                     
                     subscriptionId = request.GET.get("subscriptionId")
 
                     order_exists = OrderModel.objects.filter(
@@ -321,12 +311,11 @@ class SubscriptionViewSet(viewsets.ViewSet):
                  return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
             
 
-
         @swagger_auto_schema(
-                  tags=["SubOwner"],
+                  tags=["Subscription"],
                   operation_description="Subscrioption list by user ID",
                   responses={200: SubscriptionListSerializer, 404: 'Not found'},
-                  manual_parameters=[TOKEN, USER_ID]
+                  manual_parameters=[TOKEN]
         )
         @action(detail=False, methods=["get"])
         def subscriptions_list_by_user_id(self, request):
@@ -338,13 +327,10 @@ class SubscriptionViewSet(viewsets.ViewSet):
                     if error:
                         return error
                     
-                    user_id = request.query_params.get("userId")
-            
                     filters = {}
 
-                    if user_id:
-                            filters["user_id"] = user_id
-
+                    filters["user_id"] = request.query_params.get("userId")
+                    
                     subscriptions = SubscriptionModel.objects.filter(
                         **filters
                     ).order_by("-id")

@@ -14,18 +14,15 @@ from dc.utils import authenticate_and_get_user
 from dc.errors import *
 from dc.parameters import *
 
-from rest_framework import viewsets, status
+from rest_framework import viewsets
 from rest_framework.decorators import action
-from rest_framework.response import Response
 from django.db.models import Exists, OuterRef
-from django.db.models import Avg, DecimalField, FloatField
 from subscription.models import SubscriptionModel
-from django.db.models.functions import Coalesce
+ 
 from dc.constant import *
 
 from .models import ProductModel
 from .serializers import (
-    ProductListSerializer,
     ProductCreateSerializer
 )
 
@@ -66,17 +63,11 @@ class ProductViewSet(viewsets.ViewSet):
                 queryset = ProductModel.objects.filter(
                     is_active=True
                 ).select_related(
-                    "subOwner",
+                    "vendor",
                     "offer"
                 ).prefetch_related(
                     "pricing_options",
-                    "subOwner__addresses",
-                ).annotate(
-                    avg_rating=Coalesce(
-                        Avg("ratings__rating"),
-                        0.0,
-                        output_field=FloatField()
-                    )
+                    "vendor__addresses",
                 ).order_by("-created_at")
 
                 serializer = ProductDetailSerializer(
@@ -121,11 +112,11 @@ class ProductViewSet(viewsets.ViewSet):
                     id=product_id,
                     is_active=True
                 ).select_related(
-                    "subOwner",
+                    "vendor",
                     "offer"
                 ).prefetch_related(
                     "pricing_options",
-                    "subOwner__addresses",
+                    "vendor__addresses",
                 ) .annotate(
                         isSubscribed=Exists(
                             SubscriptionModel.objects.filter(
@@ -134,12 +125,6 @@ class ProductViewSet(viewsets.ViewSet):
                                 product=OuterRef("pk")
                             )
                         )
-                    ).annotate(
-                    avg_rating=Coalesce(
-                        Avg("ratings__rating"),
-                        0.0,
-                        output_field=FloatField()
-                    )
                 ).first()
 
                 if not product:
@@ -160,49 +145,3 @@ class ProductViewSet(viewsets.ViewSet):
                     "message": "Something went wrong !!",
                     "code": ERROR_CODE_NOT_FOUND
                 })
-
-        @swagger_auto_schema(
-            tags=["Product"],
-            operation_description="List of all products by subowner",
-            manual_parameters=[TOKEN, SUB_OWNER_ID]
-        )
-        @action(detail=False, methods=['get'])
-        def product_list_subowner(self, request):
-            try:
-
-                print('request ', request)
-                user, error = authenticate_and_get_user(request)
-                print('request user ', user)
-               
-
-                if error:
-                    return error
-        
-                products = ProductModel.objects.filter(
-                        is_active=True
-                    ).annotate(
-                        isSubscribed=Exists(
-                            SubscriptionModel.objects.filter(
-                                user=user,
-                                status = ACTIVE,
-                                product=OuterRef("pk")
-                            )
-                        )
-                    ).order_by("-created_at")
-
-                for product in products:
-                    print('Product::::   ',product.name, product.isSubscribed)
-
-                serializer = ProductListSerializer(products,   many=True)
-
-                return response_fun(RESPONSE_SUCCESS,
-                                    {
-                                          'message':"List of all products by subowner",
-                                          'data': serializer.data
-                                    })
-            except Exception as e:
-                print('request e ', e)
-                return response_fun(RESPONSE_INVALID, {'message': 'Something went  wrong !!','code': ERROR_CODE_NOT_FOUND}) 
-
-
-

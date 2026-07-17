@@ -24,6 +24,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-k@7hun5bll87k^#_%%pma1w^1(el9_9q+$+3-694twr(fkk1d!'
 
+GROQ_API_KEY = "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"
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -61,7 +63,7 @@ CORS_ALLOW_HEADERS = [
 CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://7e4e-182-77-58-183.ngrok-free.app",
+    "https://bbb6-103-170-81-167.ngrok-free.app",
 ]
 
 # Application definition
@@ -84,7 +86,7 @@ INSTALLED_APPS = [
      # Custom apps
     'users',
     'address',
-    'owner',
+    'vendor',
     'product',
     'subscription',
     'order',
@@ -93,7 +95,9 @@ INSTALLED_APPS = [
     'reviews',
     'offer',
     'onetimeorder',
-    'ondemand'
+    'ondemand',
+    'contact_us',
+    'delivery'
 
 ]
 
@@ -116,7 +120,7 @@ ROOT_URLCONF = 'dc.urls'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
-    "https://7e4e-182-77-58-183.ngrok-free.app",
+    "https://bbb6-103-170-81-167.ngrok-free.app",
 ]
 
 REST_FRAMEWORK = {
@@ -219,7 +223,7 @@ CELERY_TIMEZONE = 'UTC'
 
 SWAGGER_SETTINGS = {
     "USE_SESSION_AUTH": False,
-    "DEFAULT_API_URL": "https://b194-182-77-58-183.ngrok-free.app",
+    "DEFAULT_API_URL": "https://bbb6-103-170-81-167.ngrok-free.app",
 
     'SECURITY_DEFINITIONS': {
         'token': {
