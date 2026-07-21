@@ -24,8 +24,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-k@7hun5bll87k^#_%%pma1w^1(el9_9q+$+3-694twr(fkk1d!'
 
-
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -97,7 +95,8 @@ INSTALLED_APPS = [
     'onetimeorder',
     'ondemand',
     'contact_us',
-    'delivery'
+    'delivery',
+    'ai'
 
 ]
 

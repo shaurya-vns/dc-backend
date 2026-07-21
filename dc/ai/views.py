@@ -10,51 +10,67 @@ from dc.errors import *
 from dc.parameters import * 
 from dc.utils import authenticate_and_get_user
 from ai.serializers import AIChatSerializer, EventStreamRenderer
-from ai.services import AIChatService
 from django.http import StreamingHttpResponse
+import json
+import time
+from .services.chatbot_service import ChatBotService
+from .services.intent_detector import IntentDetector
+from .services.entity_extractor import EntityExtractor
+from .utils import stream_event, stream_delay
 
 
 
 class AIViewSet(viewsets.ViewSet):
 
-    @swagger_auto_schema(
-        tags=["AI"],
-        manual_parameters=[TOKEN],
-        request_body=AIChatSerializer
-    )
-    
-    @action(
-    detail=False,
-    methods=["post"],
-    renderer_classes=(EventStreamRenderer,)
-    )
-    def chat_stream(self, request):
-
-        user, error = authenticate_and_get_user(request)
-
-        print('user ', user)
-
-
-        if error:
-            return error
-        
-        print('user ', user)
-
-
-        message = request.data.get("message")
-
-        response = StreamingHttpResponse(
-            AIChatService.chat_stream(
-                user,
-                message
-            ),
-            content_type="text/event-stream"
+        @swagger_auto_schema(
+            tags=["AI"],
+            manual_parameters=[TOKEN],
+            request_body=AIChatSerializer
         )
+        @action(
+            detail=False,
+            methods=["post"]
+        )
+        def chat_stream(self, request):
 
-        response["X-Accel-Buffering"] = "no"
-        response["Cache-Control"] = "no-cache, no-transform"
+            try:
+                    user, error = authenticate_and_get_user(request)
 
+                    if error:
+                        return error
 
-        print(' responseresponse  ', response)
+                    message = request.data.get("message", "").strip()
 
-        return response
+                    if not message:
+                        return response_fun(
+                            RESPONSE_INVALID,
+                            {
+                                "message": 'Message is required.'
+                            }
+                        )
+                        
+
+                    response = ChatBotService.process(
+                        user=user,
+                        message=message
+                    )
+
+                    print('eeeeee response ', response)
+
+                    return response_fun(
+                        RESPONSE_SUCCESS,
+                        {
+                            'data': response,
+                        }
+                    )
+        
+            except Exception as e:
+                print('sssss ', e)
+                return response_fun(
+                    RESPONSE_INVALID,
+                    {
+                        "message": str(e)
+                    }
+                )
+        
+ 
